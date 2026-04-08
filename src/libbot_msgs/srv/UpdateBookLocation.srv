@@ -1,0 +1,12 @@
+# 更新图书位置
+# 当图书位置发生变化时调用
+
+string book_id          # 图书ID
+string new_shelf_zone   # 新的书架区域
+int32 new_shelf_level   # 新的书架层级
+int32 new_shelf_position    # 新的书架位置
+geometry_msgs/Pose new_pose # 新的位置坐标
+string update_reason    # 更新原因: scan, manual, correction
+---
+bool success            # 更新是否成功
+string message          # 描述信息

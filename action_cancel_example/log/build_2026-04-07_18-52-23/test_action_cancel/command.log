@@ -1,0 +1,2 @@
+Invoking command in '/home/lhl/test_action_ws/build/test_action_cancel': CMAKE_PREFIX_PATH=/opt/ros/humble /opt/cmake-3.28/bin/cmake /home/lhl/test_action_ws/src/test_action_cancel -DCMAKE_INSTALL_PREFIX=/home/lhl/test_action_ws/install/test_action_cancel
+Invoked command in '/home/lhl/test_action_ws/build/test_action_cancel' returned '1': CMAKE_PREFIX_PATH=/opt/ros/humble /opt/cmake-3.28/bin/cmake /home/lhl/test_action_ws/src/test_action_cancel -DCMAKE_INSTALL_PREFIX=/home/lhl/test_action_ws/install/test_action_cancel

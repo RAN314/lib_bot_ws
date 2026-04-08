@@ -1,0 +1,10 @@
+[0.008s] Invoking command in '/home/lhl/test_action_ws/build/test_action_cancel': AMENT_PREFIX_PATH=/home/lhl/test_action_ws/install/test_action_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/lhl/test_action_ws/install/test_action_interfaces:/opt/ros/humble LD_LIBRARY_PATH=/home/lhl/test_action_ws/install/test_action_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/lhl/test_action_ws/install/test_action_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /opt/cmake-3.28/bin/cmake /home/lhl/test_action_ws/src/test_action_cancel -DCMAKE_INSTALL_PREFIX=/home/lhl/test_action_ws/install/test_action_cancel
+[0.009s] CMake Warning:
+[0.009s]   Ignoring extra path from command line:
+[0.009s] 
+[0.009s]    "/home/lhl/test_action_ws/src/test_action_cancel"
+[0.009s] 
+[0.009s] 
+[0.009s] CMake Error: The source directory "/home/lhl/test_action_ws/src/test_action_cancel" does not appear to contain CMakeLists.txt.
+[0.009s] Specify --help for usage, or press the help button on the CMake GUI.
+[0.010s] Invoked command in '/home/lhl/test_action_ws/build/test_action_cancel' returned '1': AMENT_PREFIX_PATH=/home/lhl/test_action_ws/install/test_action_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/lhl/test_action_ws/install/test_action_interfaces:/opt/ros/humble LD_LIBRARY_PATH=/home/lhl/test_action_ws/install/test_action_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/lhl/test_action_ws/install/test_action_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /opt/cmake-3.28/bin/cmake /home/lhl/test_action_ws/src/test_action_cancel -DCMAKE_INSTALL_PREFIX=/home/lhl/test_action_ws/install/test_action_cancel

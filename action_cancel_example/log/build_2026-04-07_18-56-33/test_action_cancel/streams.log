@@ -1,0 +1,24 @@
+[0.450s] Invoking command in '/home/lhl/test_action_ws/src/test_action_cancel': AMENT_PREFIX_PATH=/home/lhl/test_action_ws/install/test_action_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/lhl/test_action_ws/install/test_action_interfaces LD_LIBRARY_PATH=/home/lhl/test_action_ws/install/test_action_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/lhl/test_action_ws/build/test_action_cancel/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages:/home/lhl/test_action_ws/install/test_action_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/test_action_cancel build --build-base /home/lhl/test_action_ws/build/test_action_cancel/build install --record /home/lhl/test_action_ws/build/test_action_cancel/install.log --single-version-externally-managed install_data
+[0.611s] running egg_info
+[0.611s] writing ../../build/test_action_cancel/test_action_cancel.egg-info/PKG-INFO
+[0.611s] writing dependency_links to ../../build/test_action_cancel/test_action_cancel.egg-info/dependency_links.txt
+[0.611s] writing entry points to ../../build/test_action_cancel/test_action_cancel.egg-info/entry_points.txt
+[0.611s] writing requirements to ../../build/test_action_cancel/test_action_cancel.egg-info/requires.txt
+[0.611s] writing top-level names to ../../build/test_action_cancel/test_action_cancel.egg-info/top_level.txt
+[0.612s] reading manifest file '../../build/test_action_cancel/test_action_cancel.egg-info/SOURCES.txt'
+[0.613s] writing manifest file '../../build/test_action_cancel/test_action_cancel.egg-info/SOURCES.txt'
+[0.613s] running build
+[0.613s] running build_py
+[0.613s] copying test_action_cancel/test_cancel_server.py -> /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel
+[0.613s] running install
+[0.613s] running install_lib
+[0.614s] copying /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel/test_cancel_server.py -> /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel
+[0.614s] byte-compiling /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel/test_cancel_server.py to test_cancel_server.cpython-310.pyc
+[0.614s] running install_data
+[0.615s] running install_egg_info
+[0.616s] removing '/home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel-0.0.0-py3.10.egg-info' (and everything under it)
+[0.616s] Copying ../../build/test_action_cancel/test_action_cancel.egg-info to /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel-0.0.0-py3.10.egg-info
+[0.616s] running install_scripts
+[0.628s] Installing test_cancel_server script to /home/lhl/test_action_ws/install/test_action_cancel/lib/test_action_cancel
+[0.629s] writing list of installed files to '/home/lhl/test_action_ws/build/test_action_cancel/install.log'
+[0.644s] Invoked command in '/home/lhl/test_action_ws/src/test_action_cancel' returned '0': AMENT_PREFIX_PATH=/home/lhl/test_action_ws/install/test_action_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/lhl/test_action_ws/install/test_action_interfaces LD_LIBRARY_PATH=/home/lhl/test_action_ws/install/test_action_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/lhl/test_action_ws/build/test_action_cancel/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages:/home/lhl/test_action_ws/install/test_action_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/test_action_cancel build --build-base /home/lhl/test_action_ws/build/test_action_cancel/build install --record /home/lhl/test_action_ws/build/test_action_cancel/install.log --single-version-externally-managed install_data

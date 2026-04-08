@@ -1,0 +1,5 @@
+[console_scripts]
+control_publisher = test_action_cancel.control_publisher:main
+test_cancel_client = test_action_cancel.test_cancel_client:main
+test_cancel_server = test_action_cancel.test_cancel_server:main
+

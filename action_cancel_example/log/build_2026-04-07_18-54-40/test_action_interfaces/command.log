@@ -1,0 +1,4 @@
+Invoking command in '/home/lhl/test_action_ws/build/test_action_interfaces': CMAKE_PREFIX_PATH=/opt/ros/humble /opt/cmake-3.28/bin/cmake --build /home/lhl/test_action_ws/build/test_action_interfaces -- -j16 -l16
+Invoked command in '/home/lhl/test_action_ws/build/test_action_interfaces' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /opt/cmake-3.28/bin/cmake --build /home/lhl/test_action_ws/build/test_action_interfaces -- -j16 -l16
+Invoking command in '/home/lhl/test_action_ws/build/test_action_interfaces': CMAKE_PREFIX_PATH=/opt/ros/humble /opt/cmake-3.28/bin/cmake --install /home/lhl/test_action_ws/build/test_action_interfaces
+Invoked command in '/home/lhl/test_action_ws/build/test_action_interfaces' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /opt/cmake-3.28/bin/cmake --install /home/lhl/test_action_ws/build/test_action_interfaces

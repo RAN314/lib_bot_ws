@@ -1,0 +1,18 @@
+# 获取图书信息
+# 查询数据库获取图书详细信息
+
+string book_id          # 图书ID（ISBN或其他唯一标识）
+---
+bool success            # 查询是否成功
+string message          # 描述信息
+
+string id               # 图书ID
+string isbn             # ISBN号
+string title            # 书名
+string author           # 作者
+string category         # 分类
+string shelf_zone       # 书架区域
+int32 shelf_level       # 书架层级
+int32 shelf_position    # 书架位置
+string status           # 状态: available, borrowed, misplaced
+geometry_msgs/Pose pose # 图书位置（x, y, z坐标）

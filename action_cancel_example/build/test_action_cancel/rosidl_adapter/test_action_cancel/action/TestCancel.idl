@@ -1,0 +1,20 @@
+// generated from rosidl_adapter/resource/action.idl.em
+// with input from test_action_cancel/action/TestCancel.action
+// generated code does not contain a copyright notice
+
+
+module test_action_cancel {
+  module action {
+    @verbatim (language="comment", text=
+      "TestCancel.action")
+    struct TestCancel_Goal {
+      int32 duration;
+    };
+    struct TestCancel_Result {
+      string message;
+    };
+    struct TestCancel_Feedback {
+      string progress;
+    };
+  };
+};

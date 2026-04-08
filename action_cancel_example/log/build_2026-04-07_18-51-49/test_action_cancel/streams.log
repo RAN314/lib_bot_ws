@@ -1,0 +1,39 @@
+[0.544s] Invoking command in '/home/lhl/test_action_ws/src/test_action_cancel': PYTHONPATH=/home/lhl/test_action_ws/build/test_action_cancel/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/test_action_cancel build --build-base /home/lhl/test_action_ws/build/test_action_cancel/build install --record /home/lhl/test_action_ws/build/test_action_cancel/install.log --single-version-externally-managed install_data
+[0.711s] running egg_info
+[0.711s] creating ../../build/test_action_cancel/test_action_cancel.egg-info
+[0.711s] writing ../../build/test_action_cancel/test_action_cancel.egg-info/PKG-INFO
+[0.711s] writing dependency_links to ../../build/test_action_cancel/test_action_cancel.egg-info/dependency_links.txt
+[0.711s] writing entry points to ../../build/test_action_cancel/test_action_cancel.egg-info/entry_points.txt
+[0.712s] writing requirements to ../../build/test_action_cancel/test_action_cancel.egg-info/requires.txt
+[0.712s] writing top-level names to ../../build/test_action_cancel/test_action_cancel.egg-info/top_level.txt
+[0.712s] writing manifest file '../../build/test_action_cancel/test_action_cancel.egg-info/SOURCES.txt'
+[0.712s] reading manifest file '../../build/test_action_cancel/test_action_cancel.egg-info/SOURCES.txt'
+[0.713s] writing manifest file '../../build/test_action_cancel/test_action_cancel.egg-info/SOURCES.txt'
+[0.713s] running build
+[0.713s] running build_py
+[0.713s] creating /home/lhl/test_action_ws/build/test_action_cancel/build
+[0.713s] creating /home/lhl/test_action_ws/build/test_action_cancel/build/lib
+[0.713s] creating /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel
+[0.713s] copying test_action_cancel/test_cancel_server.py -> /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel
+[0.713s] copying test_action_cancel/__init__.py -> /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel
+[0.713s] running install
+[0.713s] running install_lib
+[0.714s] creating /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel
+[0.714s] copying /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel/test_cancel_server.py -> /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel
+[0.714s] copying /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel/__init__.py -> /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel
+[0.714s] byte-compiling /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel/test_cancel_server.py to test_cancel_server.cpython-310.pyc
+[0.715s] byte-compiling /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel/__init__.py to __init__.cpython-310.pyc
+[0.715s] running install_data
+[0.715s] creating /home/lhl/test_action_ws/install/test_action_cancel/share/ament_index
+[0.715s] creating /home/lhl/test_action_ws/install/test_action_cancel/share/ament_index/resource_index
+[0.715s] creating /home/lhl/test_action_ws/install/test_action_cancel/share/ament_index/resource_index/packages
+[0.715s] copying resource/test_action_cancel -> /home/lhl/test_action_ws/install/test_action_cancel/share/ament_index/resource_index/packages
+[0.715s] copying package.xml -> /home/lhl/test_action_ws/install/test_action_cancel/share/test_action_cancel
+[0.715s] creating /home/lhl/test_action_ws/install/test_action_cancel/share/test_action_cancel/action
+[0.715s] copying action/TestCancel.action -> /home/lhl/test_action_ws/install/test_action_cancel/share/test_action_cancel/action
+[0.715s] running install_egg_info
+[0.716s] Copying ../../build/test_action_cancel/test_action_cancel.egg-info to /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel-0.0.0-py3.10.egg-info
+[0.717s] running install_scripts
+[0.729s] Installing test_cancel_server script to /home/lhl/test_action_ws/install/test_action_cancel/lib/test_action_cancel
+[0.729s] writing list of installed files to '/home/lhl/test_action_ws/build/test_action_cancel/install.log'
+[0.746s] Invoked command in '/home/lhl/test_action_ws/src/test_action_cancel' returned '0': PYTHONPATH=/home/lhl/test_action_ws/build/test_action_cancel/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/test_action_cancel build --build-base /home/lhl/test_action_ws/build/test_action_cancel/build install --record /home/lhl/test_action_ws/build/test_action_cancel/install.log --single-version-externally-managed install_data

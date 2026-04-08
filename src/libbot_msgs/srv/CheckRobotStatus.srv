@@ -1,0 +1,10 @@
+# 检查机器人状态
+# 获取机器人当前状态和可用性
+
+---
+bool is_available       # 机器人是否可用
+string current_task     # 当前任务ID（如果有）
+string robot_state      # 机器人状态: idle, navigating, scanning, error
+float32 battery_level   # 电池电量
+geometry_msgs/Pose current_pose     # 当前位置
+string[] active_errors  # 当前错误列表

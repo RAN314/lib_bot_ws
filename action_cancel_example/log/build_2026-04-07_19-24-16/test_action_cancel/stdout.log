@@ -1,0 +1,27 @@
+running egg_info
+writing ../../build/test_action_cancel/test_action_cancel.egg-info/PKG-INFO
+writing dependency_links to ../../build/test_action_cancel/test_action_cancel.egg-info/dependency_links.txt
+writing entry points to ../../build/test_action_cancel/test_action_cancel.egg-info/entry_points.txt
+writing requirements to ../../build/test_action_cancel/test_action_cancel.egg-info/requires.txt
+writing top-level names to ../../build/test_action_cancel/test_action_cancel.egg-info/top_level.txt
+reading manifest file '../../build/test_action_cancel/test_action_cancel.egg-info/SOURCES.txt'
+writing manifest file '../../build/test_action_cancel/test_action_cancel.egg-info/SOURCES.txt'
+running build
+running build_py
+copying test_action_cancel/test_cancel_server.py -> /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel
+copying test_action_cancel/test_cancel_client.py -> /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel
+running install
+running install_lib
+copying /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel/test_cancel_server.py -> /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel
+copying /home/lhl/test_action_ws/build/test_action_cancel/build/lib/test_action_cancel/test_cancel_client.py -> /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel
+byte-compiling /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel/test_cancel_server.py to test_cancel_server.cpython-310.pyc
+byte-compiling /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel/test_cancel_client.py to test_cancel_client.cpython-310.pyc
+running install_data
+running install_egg_info
+removing '/home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/test_action_cancel/test_action_cancel.egg-info to /home/lhl/test_action_ws/install/test_action_cancel/lib/python3.10/site-packages/test_action_cancel-0.0.0-py3.10.egg-info
+running install_scripts
+Installing control_publisher script to /home/lhl/test_action_ws/install/test_action_cancel/lib/test_action_cancel
+Installing test_cancel_client script to /home/lhl/test_action_ws/install/test_action_cancel/lib/test_action_cancel
+Installing test_cancel_server script to /home/lhl/test_action_ws/install/test_action_cancel/lib/test_action_cancel
+writing list of installed files to '/home/lhl/test_action_ws/build/test_action_cancel/install.log'

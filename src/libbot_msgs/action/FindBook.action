@@ -1,0 +1,23 @@
+# FindBook Action Definition
+# 用于找书任务
+
+# Goal: 找书请求
+string book_id          # 图书ID（ISBN或其他唯一标识）
+bool guide_patron       # 是否引导读者
+---
+# Result: 找书结果
+bool success            # 是否成功找到图书
+string message          # 结果描述
+float32 search_time     # 搜索耗时（秒）
+int32 navigation_attempts  # 导航尝试次数
+int32 scan_attempts     # RFID扫描尝试次数
+---
+# Feedback: 进度反馈
+string status           # 当前状态: idle, navigating, scanning, approaching, completed
+float32 progress        # 进度百分比 (0-100)
+float32 distance_to_goal    # 到目标的距离（米）
+geometry_msgs/Pose current_pose  # 当前机器人位置
+string[] books_detected # 已检测到的图书ID列表
+float32 signal_strength # 当前信号强度 (0-1)
+string detection_direction  # 检测方向: front, back, left, right, stop
+float32 estimated_remaining # 预计剩余时间（秒）
