@@ -13,8 +13,8 @@ This index maps all stories from the sprint plan. Each story file contains:
 - [Story 1-1: UI主窗口布局实现](./1-1-ui-main-window.md) - [done]
 - [Story 1-2: Ros2Manager通信封装实现](./1-2-ros2-manager.md) - [done]
 - [Story 1-3: 找书对话框和按钮实现](./1-3-find-book-dialog.md) - [done]
-- [Story 1-4: 状态显示和进度条实现](./1-4-status-display.md) - [created]
-- [Story 1-5: 日志面板和错误提示实现](./1-5-log-panel.md) - [created]
+- [Story 1-4: 状态显示和进度条实现](./1-4-status-display.md) - [done]
+- [Story 1-5: 日志面板和错误提示实现](./1-5-log-panel.md) - [done]
 
 ## Epic 2: 错误处理与恢复机制
 - [Story 2-1: L1恢复行为实现](./2-1-l1-recovery.md) - [backlog]
@@ -70,7 +70,7 @@ This index maps all stories from the sprint plan. Each story file contains:
 - [Epic 8 回顾](../sprint-status.yaml) - [optional]
 
 ## Progress Summary
-- **Completed:** 3 stories (1-1, 1-2, 5-4)
+- **Completed:** 5 stories (1-1, 1-2, 1-4, 1-5, 5-4)
 - **In Progress:** 0 stories
-- **Backlog:** 36 stories
+- **Backlog:** 34 stories
 
