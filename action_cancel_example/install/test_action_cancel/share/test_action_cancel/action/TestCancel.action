@@ -1,6 +1,0 @@
-# TestCancel.action
-int32 duration
----
-string message
----
-string progress
