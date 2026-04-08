@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
+from .status_panel import StatusPanel
+
 class RightPanel(QWidget):
     """右侧面板 - 600px宽，显示信息"""
 
@@ -19,9 +21,9 @@ class RightPanel(QWidget):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(15)
 
-        # 当前任务卡
-        self.task_card = TaskCard()
-        layout.addWidget(self.task_card)
+        # 状态显示面板 (替换原有的task_card)
+        self.status_panel = StatusPanel()
+        layout.addWidget(self.status_panel)
 
         # 统计信息卡
         self.stats_card = StatsCard()
@@ -30,6 +32,25 @@ class RightPanel(QWidget):
         # 日志面板
         self.log_panel = LogPanel()
         layout.addWidget(self.log_panel)
+
+    def update_task_status(self, status_dict):
+        """更新任务状态
+
+        Args:
+            status_dict: 状态字典，格式取决于Ros2Manager的信号
+        """
+        try:
+            print(f"[DEBUG] RightPanel.update_task_status called: {status_dict.get('status', 'unknown')}")
+            # 使用新的StatusPanel更新状态
+            if hasattr(self, 'status_panel'):
+                print(f"[DEBUG] Calling status_panel.update_status")
+                self.status_panel.update_status(status_dict)
+                print(f"[DEBUG] status_panel.update_status completed")
+            else:
+                print(f"[DEBUG] status_panel not found!")
+
+        except Exception as e:
+            print(f"Error updating task status: {e}")
 
 class TaskCard(QFrame):
     """任务卡组件"""
@@ -206,41 +227,11 @@ class LogPanel(QFrame):
         # 限制日志数量
         if self.log_model.rowCount() > self.max_logs:
             self.log_model.removeRow(self.log_model.rowCount() - 1)
-
-    def update_task_status(self, status_dict):
-        """更新任务状态
-
-        Args:
-            status_dict: 状态字典，格式取决于Ros2Manager的信号
-        """
-        try:
-            # 提取状态信息
-            status = status_dict.get("status", "unknown")
-            progress = status_dict.get("progress", 0)
-            estimated_remaining = status_dict.get("estimated_remaining", 0)
-
-            # 更新任务卡片
-            if hasattr(self.task_card, 'update_task'):
-                self.task_card.update_task(
-                    status=status,
-                    progress=progress,
-                    info=f"预计剩余时间: {estimated_remaining:.1f}秒" if estimated_remaining > 0 else None
-                )
-
-            # 更新状态文本
-            status_text = self._get_status_text(status)
-            if hasattr(self.task_card, 'task_status_label'):
-                self.task_card.task_status_label.setText(f"状态: {status_text}")
-
-            # 更新进度条
-            if hasattr(self.task_card, 'progress_bar'):
-                self.task_card.progress_bar.setValue(int(progress))
-
-        except Exception as e:
-            print(f"Error updating task status: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _get_status_text(self, status):
-        """获取状态文本"""
+        """获取状态文本（保留用于兼容性）"""
         status_map = {
             "idle": "待机",
             "navigating": "导航中",

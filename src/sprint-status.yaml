@@ -53,10 +53,10 @@ development_status:
   1-2-ros2-manager: done
 
   # 找书对话框和按钮实现（Ctrl+N快捷键）
-  1-3-find-book-dialog: backlog
+  1-3-find-book-dialog: done
 
   # 状态显示和进度条实现（实时显示任务状态、机器人位置）
-  1-4-status-display: backlog
+  1-4-status-display: review
 
   # 日志面板和错误提示实现（四级错误显示）
   1-5-log-panel: backlog

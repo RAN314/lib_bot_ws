@@ -96,8 +96,11 @@ class MainWindow(QMainWindow):
 
     def setup_ros2_connections(self):
         """连接ROS2管理器的信号到UI"""
-        # 任务状态更新
-        self.ros2_manager.task_status_updated.connect(self.on_task_status_updated)
+        # 任务状态更新（使用queued connection确保线程安全）
+        self.ros2_manager.task_status_updated.connect(
+            self.on_task_status_updated,
+            type=Qt.QueuedConnection
+        )
 
         # 系统健康状态
         self.ros2_manager.system_health_updated.connect(self.on_system_health_updated)
@@ -189,6 +192,9 @@ class MainWindow(QMainWindow):
 
     def on_task_status_updated(self, status):
         """处理任务状态更新"""
+        # 调试：打印收到的状态
+        print(f"[DEBUG] 主窗口收到状态更新: {status.get('status', 'unknown')}, 进度: {status.get('progress', 0)}%")
+
         status_text = status.get("status", "unknown")
 
         if status_text == "completed":

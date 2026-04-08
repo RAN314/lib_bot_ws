@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer, QThread
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import ReentrantCallbackGroup
 import threading
 
 
@@ -68,9 +69,13 @@ class Ros2Manager(QObject):
     def _init_ros2(self):
         """初始化ROS2环境"""
         try:
-            # 检查rclpy是否已初始化
-            if not rclpy.ok():
-                rclpy.init()
+            # 初始化rclpy（如果尚未初始化）
+            try:
+                if not rclpy.ok():
+                    rclpy.init()
+            except:
+                # 如果已经初始化，忽略错误
+                pass
 
             # 创建节点
             self.node = Node(self.node_name)
@@ -80,7 +85,8 @@ class Ros2Manager(QObject):
                 from libbot_msgs.action import FindBook
 
                 self.find_book_action_client = ActionClient(
-                    self.node, FindBook, "/find_book"
+                    self.node, FindBook, "/find_book",
+                    callback_group=ReentrantCallbackGroup()
                 )
 
                 # 检查Action服务器是否可用（非阻塞）
@@ -118,13 +124,14 @@ class Ros2Manager(QObject):
             self.executor = MultiThreadedExecutor()
             self.executor.add_node(self.node)
 
-            self.executor_thread = threading.Thread(
-                target=self._executor_spin, daemon=True
-            )
-            self.executor_thread.start()
+            # 使用QTimer在主线程中处理ROS2事件，避免线程安全问题
+            self.ros2_timer = QTimer()
+            self.ros2_timer.timeout.connect(self._process_ros2_events)
+            self.ros2_timer.start(10)  # 每10ms处理一次ROS2事件
 
             # 启动健康检查定时器
             self._start_health_check()
+
 
             self.node.get_logger().info("Ros2Manager initialized successfully")
 
@@ -146,6 +153,104 @@ class Ros2Manager(QObject):
         self.health_check_timer = QTimer()
         self.health_check_timer.timeout.connect(self._check_system_health)
         self.health_check_timer.start(1000)  # 1秒检查一次
+
+    def _process_ros2_events(self):
+        """在主线程中处理ROS2事件"""
+        if self.node is not None and rclpy.ok():
+            self.executor.spin_once(timeout_sec=0.001)  # 非阻塞处理
+
+    def _start_action_client_check(self):
+        """启动Action客户端状态检查"""
+        self.action_check_timer = QTimer()
+        self.action_check_timer.timeout.connect(self._check_action_client_status)
+        self.action_check_timer.start(2000)  # 2秒检查一次
+
+
+    def _start_simulation(self, book_id, guide_patron):
+        """启动模拟任务（在没有真实ROS2 Action服务器时使用）"""
+        # 创建模拟任务定时器
+        self.simulation_timer = QTimer()
+        self.simulation_progress = 0
+        self.simulation_book_id = book_id
+        self.simulation_guide_patron = guide_patron
+
+        # 立即发送初始状态
+        self._send_simulation_update()
+
+        # 设置定时器，每100ms更新一次状态（10Hz）
+        self.simulation_timer.timeout.connect(self._send_simulation_update)
+        self.simulation_timer.start(100)
+
+    def _send_simulation_update(self):
+        """发送模拟状态更新"""
+        import time
+
+        # 模拟进度增长
+        self.simulation_progress += 2  # 每次增加2%
+
+        if self.simulation_progress <= 100:
+            # 根据进度确定状态
+            if self.simulation_progress < 30:
+                status = "navigating"
+            elif self.simulation_progress < 70:
+                status = "scanning"
+            elif self.simulation_progress < 95:
+                status = "approaching"
+            else:
+                status = "completed"
+
+            # 模拟位置变化
+            progress_ratio = self.simulation_progress / 100.0
+            x = 0.0 + (5.0 * progress_ratio)  # 从0到5
+            y = 0.0 + (3.0 * progress_ratio)  # 从0到3
+
+            # 模拟图书检测
+            books_detected = []
+            signal_strength = 0.0
+            if self.simulation_progress > 50:
+                books_detected = [self.simulation_book_id]
+                signal_strength = 0.5 + (0.4 * (self.simulation_progress - 50) / 50)  # 0.5到0.9
+
+            # 计算剩余时间
+            remaining = max(0, 30.0 - (30.0 * progress_ratio))
+
+            # 发送状态更新
+            status_data = {
+                "status": status,
+                "progress": float(self.simulation_progress),
+                "distance_to_goal": 10.0 * (1.0 - progress_ratio),
+                "current_pose": {"x": x, "y": y},
+                "books_detected": books_detected,
+                "signal_strength": signal_strength,
+                "detection_direction": "front" if signal_strength > 0.7 else "",
+                "estimated_remaining": remaining,
+            }
+
+            self.task_status_updated.emit(status_data)
+
+        else:
+            # 任务完成
+            self.simulation_timer.stop()
+            self.simulation_timer = None
+
+            # 发送完成状态
+            self.task_status_updated.emit({
+                "status": "completed",
+                "progress": 100.0,
+                "distance_to_goal": 0.0,
+                "current_pose": {"x": 5.0, "y": 3.0},
+                "books_detected": [self.simulation_book_id],
+                "signal_strength": 0.95,
+                "detection_direction": "front",
+                "estimated_remaining": 0.0,
+                "result": {
+                    "success": True,
+                    "message": "Book found successfully",
+                    "search_time": 30.0,
+                    "navigation_attempts": 1,
+                    "scan_attempts": 3,
+                }
+            })
 
     # ========== Action通信 ==========
 
@@ -171,18 +276,8 @@ class Ros2Manager(QObject):
                 self.node.get_logger().info(
                     f"Simulating FindBook goal sent for book: {book_id}"
                 )
-                self.task_status_updated.emit(
-                    {
-                        "status": "navigating",
-                        "progress": 0,
-                        "distance_to_goal": 10.0,
-                        "current_pose": {"x": 0.0, "y": 0.0},
-                        "books_detected": [],
-                        "signal_strength": 0.0,
-                        "detection_direction": "",
-                        "estimated_remaining": 30.0,
-                    }
-                )
+                # 启动模拟任务
+                self._start_simulation(book_id, guide_patron)
                 return True
 
             # 等待Action服务器可用
@@ -259,6 +354,10 @@ class Ros2Manager(QObject):
     def _find_book_feedback_callback(self, feedback):
         """FindBook反馈回调"""
         try:
+            # 调试：打印收到的反馈
+            fb = feedback.feedback
+            self.node.get_logger().info(f"收到反馈: 状态={fb.status}, 进度={fb.progress}%")
+
             # 将ROS2反馈转换为dict
             feedback_dict = {
                 "status": feedback.feedback.status,
@@ -276,8 +375,9 @@ class Ros2Manager(QObject):
                 "estimated_remaining": feedback.feedback.estimated_remaining,
             }
 
-            # 发射信号（线程安全）
+            # 使用queued connection确保线程安全
             self.task_status_updated.emit(feedback_dict)
+
 
         except Exception as e:
             self.node.get_logger().error(f"Error in feedback callback: {str(e)}")
@@ -313,12 +413,31 @@ class Ros2Manager(QObject):
     def cancel_current_goal(self):
         """取消当前正在执行的Goal"""
         try:
+            # 检查模拟任务
+            if hasattr(self, 'simulation_timer') and self.simulation_timer is not None:
+                self.simulation_timer.stop()
+                self.simulation_timer = None
+
+                self.task_status_updated.emit({
+                    "status": "cancelled",
+                    "message": "Goal cancelled successfully",
+                    "progress": float(self.simulation_progress) if hasattr(self, 'simulation_progress') else 0.0
+                })
+
+                self.node.get_logger().info("Simulation goal cancelled")
+                return True
+
+            # 检查真实ROS2任务
             if self.current_goal_handle:
                 future = self.current_goal_handle.cancel_goal_async()
                 future.add_done_callback(self._cancel_done_callback)
                 self.node.get_logger().info("Goal cancellation requested")
                 return True
             else:
+                # 检查是否有模拟任务正在运行
+                if hasattr(self, 'simulation_timer') and self.simulation_timer is not None:
+                    return self.cancel_current_goal()  # 递归调用处理模拟任务
+
                 self.error_occurred.emit(
                     {
                         "error_code": "NO_ACTIVE_GOAL",
@@ -525,6 +644,9 @@ class Ros2Manager(QObject):
         try:
             if self.health_check_timer:
                 self.health_check_timer.stop()
+
+            if hasattr(self, 'ros2_timer') and self.ros2_timer:
+                self.ros2_timer.stop()
 
             if self.node:
                 self.node.get_logger().info("Shutting down Ros2Manager...")
