@@ -87,7 +87,7 @@ class TaskCard(QFrame):
         if status is not None:
             self.task_status_label.setText(f"状态: {status}")
         if progress is not None:
-            self.progress_bar.setValue(progress)
+            self.progress_bar.setValue(int(progress))
         if info is not None:
             self.task_info.setText(info)
 
@@ -189,7 +189,16 @@ class LogPanel(QFrame):
 
         # 创建日志项
         item = QStandardItem(message)
-        item.setForeground(Qt.white)
+
+        # 设置文本颜色（前景色）
+        text_colors = {
+            "INFO": Qt.blue,
+            "WARN": Qt.darkYellow,
+            "ERROR": Qt.red,
+            "DEBUG": Qt.gray
+        }
+        text_color = text_colors.get(level, Qt.black)
+        item.setForeground(text_color)
 
         # 添加到模型
         self.log_model.insertRow(0, item)
@@ -198,6 +207,74 @@ class LogPanel(QFrame):
         if self.log_model.rowCount() > self.max_logs:
             self.log_model.removeRow(self.log_model.rowCount() - 1)
 
+    def update_task_status(self, status_dict):
+        """更新任务状态
+
+        Args:
+            status_dict: 状态字典，格式取决于Ros2Manager的信号
+        """
+        try:
+            # 提取状态信息
+            status = status_dict.get("status", "unknown")
+            progress = status_dict.get("progress", 0)
+            estimated_remaining = status_dict.get("estimated_remaining", 0)
+
+            # 更新任务卡片
+            if hasattr(self.task_card, 'update_task'):
+                self.task_card.update_task(
+                    status=status,
+                    progress=progress,
+                    info=f"预计剩余时间: {estimated_remaining:.1f}秒" if estimated_remaining > 0 else None
+                )
+
+            # 更新状态文本
+            status_text = self._get_status_text(status)
+            if hasattr(self.task_card, 'task_status_label'):
+                self.task_card.task_status_label.setText(f"状态: {status_text}")
+
+            # 更新进度条
+            if hasattr(self.task_card, 'progress_bar'):
+                self.task_card.progress_bar.setValue(int(progress))
+
+        except Exception as e:
+            print(f"Error updating task status: {e}")
+
+    def _get_status_text(self, status):
+        """获取状态文本"""
+        status_map = {
+            "idle": "待机",
+            "navigating": "导航中",
+            "scanning": "扫描中",
+            "approaching": "接近目标",
+            "completed": "完成",
+            "cancelled": "已取消",
+            "failed": "失败"
+        }
+        return status_map.get(status, status)
+
+    def show_error(self, error_dict):
+        """显示错误
+
+        Args:
+            error_dict: 错误字典 {"error_code": "...", "message": "..."}
+        """
+        error_code = error_dict.get("error_code", "UNKNOWN")
+        message = error_dict.get("message", "Unknown error")
+
+        # 添加到日志
+        self.add_log(f"错误 [{error_code}]: {message}", "ERROR")
+
     def clear_logs(self):
         """清空所有日志"""
         self.log_model.clear()
+
+    def add_log_entry(self, message, level="INFO"):
+        """添加日志条目（兼容旧接口）"""
+        self.add_log(message, level)
+
+    def add_timestamped_log(self, message, level="INFO"):
+        """添加时间戳的日志"""
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        formatted_message = f"[{timestamp}] {message}"
+        self.add_log(formatted_message, level)

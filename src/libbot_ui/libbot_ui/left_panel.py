@@ -9,8 +9,7 @@ class LeftPanel(QWidget):
     # 按钮点击信号
     find_book_clicked = pyqtSignal()
     inventory_clicked = pyqtSignal()
-    pause_clicked = pyqtSignal()
-    cancel_clicked = pyqtSignal()
+    cancel_clicked = pyqtSignal()  # 删除pause_clicked
     home_clicked = pyqtSignal()
     emergency_stop_clicked = pyqtSignal()
     settings_clicked = pyqtSignal()
@@ -61,13 +60,10 @@ class LeftPanel(QWidget):
         self.inventory_btn = QPushButton("📚 盘点")
         self.inventory_btn.setObjectName("inventory_btn")
         self.inventory_btn.setMinimumHeight(40)
+        self.inventory_btn.setEnabled(False)  # 禁用盘点按钮
         frame_layout.addWidget(self.inventory_btn)
 
-        self.pause_btn = QPushButton("⏸️ 暂停")
-        self.pause_btn.setObjectName("pause_btn")
-        self.pause_btn.setMinimumHeight(40)
-        frame_layout.addWidget(self.pause_btn)
-
+        # 删除暂停按钮
         self.cancel_btn = QPushButton("⏹️ 取消")
         self.cancel_btn.setObjectName("cancel_btn")
         self.cancel_btn.setMinimumHeight(40)
@@ -139,10 +135,14 @@ class LeftPanel(QWidget):
         """连接按钮信号"""
         self.find_book_btn.clicked.connect(self.find_book_clicked.emit)
         self.inventory_btn.clicked.connect(self.inventory_clicked.emit)
-        self.pause_btn.clicked.connect(self.pause_clicked.emit)
+        # 删除pause_btn连接
         self.cancel_btn.clicked.connect(self.cancel_clicked.emit)
         self.home_btn.clicked.connect(self.home_clicked.emit)
         self.emergency_stop_btn.clicked.connect(self.emergency_stop_clicked.emit)
         self.settings_btn.clicked.connect(self.settings_clicked.emit)
         self.logs_btn.clicked.connect(self.logs_clicked.emit)
         self.exit_btn.clicked.connect(self.exit_clicked.emit)
+
+    def get_find_book_button(self):
+        """获取找书按钮（供MainWindow连接）"""
+        return self.find_book_btn

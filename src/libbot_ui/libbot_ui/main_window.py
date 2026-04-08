@@ -10,11 +10,14 @@ from PyQt5.QtWidgets import (
     QLabel,
     QStatusBar,
     QApplication,
+    QShortcut,
 )
 from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QKeySequence
 from .left_panel import LeftPanel
 from .right_panel import RightPanel
 from .ros2_manager import Ros2Manager
+from .find_book_dialog import FindBookDialog
 
 
 class MainWindow(QMainWindow):
@@ -38,6 +41,10 @@ class MainWindow(QMainWindow):
 
         # ROS2管理器
         self.ros2_manager = Ros2Manager()
+
+        # 找书对话框
+        self.find_book_dialog = FindBookDialog(self, self.ros2_manager)
+
         self.setup_ros2_connections()
 
     def setup_ui(self):
@@ -105,34 +112,117 @@ class MainWindow(QMainWindow):
         self.ros2_manager.book_info_received.connect(self.on_book_info_received)
 
         # 左侧面板按钮信号
-        self.left_panel.find_book_clicked.connect(self.on_find_book_clicked)
+        self.left_panel.find_book_clicked.connect(self.show_find_book_dialog)
         self.left_panel.cancel_clicked.connect(self.on_cancel_clicked)
+        # 删除pause_clicked连接
         self.left_panel.exit_clicked.connect(self.close)
+
+        # 对话框信号
+        self.find_book_dialog.find_book_confirmed.connect(self.on_find_book_confirmed)
+
+        # 快捷键 - 使用应用级快捷键确保在ROS2环境中工作
+        self.find_book_shortcut = QShortcut(QKeySequence("Ctrl+N"), self)
+        self.find_book_shortcut.setContext(Qt.ApplicationShortcut)  # 关键：设置为应用级快捷键
+        self.find_book_shortcut.activated.connect(self.show_find_book_dialog)
 
         # 更新连接状态
         self.connection_status.setText("已连接")
 
-    def on_find_book_clicked(self):
-        """找书按钮点击处理"""
-        # TODO: 打开对话框获取图书ID，目前使用测试ID
-        success = self.ros2_manager.send_find_book_goal("test_book_001")
-        if success and hasattr(self.right_panel, "add_log_entry"):
-            self.right_panel.add_log_entry("已发送找书请求: test_book_001", "info")
+        # 添加初始日志
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log("🚀 libbot控制面板已启动", "INFO")
+            self.right_panel.add_timestamped_log("💡 使用Ctrl+N快捷键打开找书对话框", "INFO")
+        elif hasattr(self.right_panel, 'add_log_entry'):
+            self.right_panel.add_log_entry("🚀 libbot控制面板已启动", "INFO")
+            self.right_panel.add_log_entry("💡 使用Ctrl+N快捷键打开找书对话框", "INFO")
+
+    def show_find_book_dialog(self):
+        """显示找书对话框"""
+        self.find_book_dialog.show()
+
+    def on_find_book_confirmed(self, book_id, guide_patron):
+        """找书确认处理"""
+        # 发送找书任务
+        success = self.ros2_manager.send_find_book_goal(
+            book_id,
+            guide_patron
+        )
+
+        if success:
+            # 在日志面板显示任务已发送
+            if hasattr(self.right_panel, 'add_timestamped_log'):
+                self.right_panel.add_timestamped_log(
+                    f"🎯 找书任务已发送: {book_id} (引导读者: {'是' if guide_patron else '否'})",
+                    "INFO"
+                )
+            elif hasattr(self.right_panel, 'add_log_entry'):
+                self.right_panel.add_log_entry(
+                    f"🎯 找书任务已发送: {book_id} (引导读者: {'是' if guide_patron else '否'})",
+                    "INFO"
+                )
+        else:
+            # 显示错误
+            if hasattr(self.right_panel, 'add_timestamped_log'):
+                self.right_panel.add_timestamped_log(
+                    f"❌ 找书任务发送失败: {book_id}",
+                    "ERROR"
+                )
+            elif hasattr(self.right_panel, 'add_log_entry'):
+                self.right_panel.add_log_entry(
+                    f"❌ 找书任务发送失败: {book_id}",
+                    "ERROR"
+                )
 
     def on_cancel_clicked(self):
         """取消按钮点击处理"""
         success = self.ros2_manager.cancel_current_goal()
-        if success and hasattr(self.right_panel, "add_log_entry"):
-            self.right_panel.add_log_entry("已发送取消请求", "warning")
+        if success:
+            if hasattr(self.right_panel, 'add_timestamped_log'):
+                self.right_panel.add_timestamped_log("⏹️ 已发送取消请求", "WARN")
+            elif hasattr(self.right_panel, 'add_log_entry'):
+                self.right_panel.add_log_entry("⏹️ 已发送取消请求", "WARN")
+        else:
+            if hasattr(self.right_panel, 'add_timestamped_log'):
+                self.right_panel.add_timestamped_log("❌ 取消请求发送失败", "ERROR")
+            elif hasattr(self.right_panel, 'add_log_entry'):
+                self.right_panel.add_log_entry("❌ 取消请求发送失败", "ERROR")
 
     def on_task_status_updated(self, status):
         """处理任务状态更新"""
-        if status.get("status") == "completed":
+        status_text = status.get("status", "unknown")
+
+        if status_text == "completed":
             self.nav_status.setText("导航: 完成")
-        elif status.get("status") == "cancelled":
+            if hasattr(self.right_panel, 'add_timestamped_log'):
+                self.right_panel.add_timestamped_log("✅ 找书任务已完成", "INFO")
+            elif hasattr(self.right_panel, 'add_log_entry'):
+                self.right_panel.add_log_entry("✅ 找书任务已完成", "INFO")
+        elif status_text == "cancelled":
             self.nav_status.setText("导航: 已取消")
-        elif status.get("status"):
-            self.nav_status.setText(f"导航: {status['status']}")
+            if hasattr(self.right_panel, 'add_timestamped_log'):
+                self.right_panel.add_timestamped_log("⏹️ 找书任务已取消", "WARN")
+            elif hasattr(self.right_panel, 'add_log_entry'):
+                self.right_panel.add_log_entry("⏹️ 找书任务已取消", "WARN")
+        elif status_text == "failed":
+            self.nav_status.setText("导航: 失败")
+            if hasattr(self.right_panel, 'add_timestamped_log'):
+                self.right_panel.add_timestamped_log("❌ 找书任务失败", "ERROR")
+            elif hasattr(self.right_panel, 'add_log_entry'):
+                self.right_panel.add_log_entry("❌ 找书任务失败", "ERROR")
+        elif status_text in ["navigating", "scanning", "approaching"]:
+            self.nav_status.setText(f"导航: {status_text}")
+            # 只在状态变化时记录日志，避免过于频繁
+            if not hasattr(self, '_last_logged_status') or self._last_logged_status != status_text:
+                progress = status.get("progress", 0)
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"🔄 任务状态更新: {status_text} ({progress:.1f}%)", "INFO"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"🔄 任务状态更新: {status_text} ({progress:.1f}%)", "INFO"
+                    )
+                self._last_logged_status = status_text
 
         # 更新进度到右侧面板
         if hasattr(self.right_panel, "update_task_status"):
@@ -153,9 +243,13 @@ class MainWindow(QMainWindow):
 
     def on_error_occurred(self, error):
         """处理错误"""
-        if hasattr(self.right_panel, "add_log_entry"):
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log(
+                f"❌ ROS2错误 [{error['error_code']}]: {error['message']}", "ERROR"
+            )
+        elif hasattr(self.right_panel, 'add_log_entry'):
             self.right_panel.add_log_entry(
-                f"错误: {error['error_code']} - {error['message']}", "error"
+                f"❌ ROS2错误 [{error['error_code']}]: {error['message']}", "ERROR"
             )
 
     def on_book_info_received(self, info):

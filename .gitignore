@@ -5,3 +5,5 @@ log/
 _bmad/
 action_cancel_example/
 tests/
+__pycache__/
+*.pyc
