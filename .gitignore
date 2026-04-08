@@ -1,7 +1,7 @@
-bin
-build
-install
-log 
-_bmad
-action_cancel_example
-tests
+bin/
+build/
+install/
+log/
+_bmad/
+action_cancel_example/
+tests/
