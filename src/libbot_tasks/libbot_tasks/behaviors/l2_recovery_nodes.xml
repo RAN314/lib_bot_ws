@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+L2恢复行为树节点定义
+任务层面重置，30-40秒恢复时间
+-->
+
+<root main_tree_to_execute="L2RecoveryTree">
+
+    <!-- L2恢复主行为树 -->
+    <BehaviorTree ID="L2RecoveryTree">
+        <Sequence name="L2_Recovery_Main">
+
+            <!-- 检查L1恢复是否失败 -->
+            <Condition ID="L1RecoveryFailed" />
+
+            <!-- L2恢复策略选择 -->
+            <ReactiveFallback name="L2_Recovery_Strategies">
+
+                <!-- 代价地图清除和重新规划 -->
+                <Sequence name="Costmap_Clear_Recovery">
+                    <Condition ID="IsNavigationStuck" />
+                    <Action ID="ClearCostmapsAndReplan" />
+                </Sequence>
+
+                <!-- 任务状态重置 -->
+                <Sequence name="Task_Reset_Recovery">
+                    <Condition ID="IsTaskCorrupted" />
+                    <Action ID="ResetTaskState" />
+                </Sequence>
+
+                <!-- 系统组件重启 -->
+                <Sequence name="Component_Restart_Recovery">
+                    <Condition ID="AreComponentsUnhealthy" />
+                    <Action ID="RestartSystemComponents" />
+                </Sequence>
+
+                <!-- 返回Home重置 -->
+                <Sequence name="Home_Reset_Recovery">
+                    <Condition ID="IsSystemUnrecoverable" />
+                    <Action ID="ReturnToHomeAndReset" />
+                </Sequence>
+
+                <!-- 所有L2恢复都失败，升级到L3 -->
+                <Action ID="EscalateToL3" />
+
+            </ReactiveFallback>
+        </Sequence>
+    </BehaviorTree>
+
+    <!-- 具体L2恢复节点定义 -->
+
+    <!-- 代价地图清除和重新规划 -->
+    <BehaviorTree ID="ClearCostmapsAndReplan">
+        <Timeout duration="30">
+            <Sequence name="Clear_And_Replan_Sequence">
+                <Action ID="ClearGlobalCostmap" />
+                <Action ID="ClearLocalCostmap" />
+                <Action ID="ReplanToGoal" />
+            </Sequence>
+        </Timeout>
+    </BehaviorTree>
+
+    <!-- 任务状态重置 -->
+    <BehaviorTree ID="ResetTaskState">
+        <Timeout duration="20">
+            <Sequence name="Task_Reset_Sequence">
+                <Action ID="SaveTaskContext" />
+                <Action ID="ResetExecutionState" />
+                <Action ID="RestoreTaskContext" />
+                <Action ID="RestartTaskExecution" />
+            </Sequence>
+        </Timeout>
+    </BehaviorTree>
+
+    <!-- 系统组件重启 -->
+    <BehaviorTree ID="RestartSystemComponents">
+        <Timeout duration="25">
+            <Fallback name="Component_Restart_Fallback">
+                <Sequence name="Critical_Components">
+                    <Action ID="RestartRFIDNodes" />
+                    <Action ID="RestartPerceptionNodes" />
+                </Sequence>
+                <Sequence name="Navigation_Components">
+                    <Action ID="RestartNav2Nodes" />
+                </Sequence>
+            </Fallback>
+        </Timeout>
+    </BehaviorTree>
+
+    <!-- 返回Home重置 -->
+    <BehaviorTree ID="ReturnToHomeAndReset">
+        <Timeout duration="40">
+            <Sequence name="Home_Reset_Sequence">
+                <Action ID="NavigateToHomePosition" />
+                <Action ID="ReinitializeAllSystems" />
+                <Action ID="UpdateSystemStatusToReady" />
+            </Sequence>
+        </Timeout>
+    </BehaviorTree>
+
+    <!-- 条件检查节点 -->
+
+    <!-- 检查L1恢复是否失败 -->
+    <BehaviorTree ID="L1RecoveryFailed">
+        <Condition name="检查L1恢复失败">
+            <Script code="return l1_recovery_failed == true;" />
+        </Condition>
+    </BehaviorTree>
+
+    <!-- 检查导航是否卡住 -->
+    <BehaviorTree ID="IsNavigationStuck">
+        <Condition name="检查导航卡住">
+            <Script code="return navigation_stuck == true;" />
+        </Condition>
+    </BehaviorTree>
+
+    <!-- 检查任务状态是否损坏 -->
+    <BehaviorTree ID="IsTaskCorrupted">
+        <Condition name="检查任务损坏">
+            <Script code="return task_corrupted == true;" />
+        </Condition>
+    </BehaviorTree>
+
+    <!-- 检查系统组件是否不健康 -->
+    <BehaviorTree ID="AreComponentsUnhealthy">
+        <Condition name="检查组件不健康">
+            <Script code="return components_unhealthy == true;" />
+        </Condition>
+    </BehaviorTree>
+
+    <!-- 检查系统是否无法恢复 -->
+    <BehaviorTree ID="IsSystemUnrecoverable">
+        <Condition name="检查系统无法恢复">
+            <Script code="return system_unrecoverable == true;" />
+        </Condition>
+    </BehaviorTree>
+
+    <!-- 动作节点 -->
+
+    <!-- 清除全局代价地图 -->
+    <BehaviorTree ID="ClearGlobalCostmap">
+        <Action name="清除全局代价地图">
+            <Script code="return ClearGlobalCostmap_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 清除局部代价地图 -->
+    <BehaviorTree ID="ClearLocalCostmap">
+        <Action name="清除局部代价地图">
+            <Script code="return ClearLocalCostmap_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 重新规划到目标 -->
+    <BehaviorTree ID="ReplanToGoal">
+        <Action name="重新规划到目标">
+            <Script code="return ReplanToGoal_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 保存任务上下文 -->
+    <BehaviorTree ID="SaveTaskContext">
+        <Action name="保存任务上下文">
+            <Script code="return SaveTaskContext_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 重置执行状态 -->
+    <BehaviorTree ID="ResetExecutionState">
+        <Action name="重置执行状态">
+            <Script code="return ResetExecutionState_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 恢复任务上下文 -->
+    <BehaviorTree ID="RestoreTaskContext">
+        <Action name="恢复任务上下文">
+            <Script code="return RestoreTaskContext_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 重启任务执行 -->
+    <BehaviorTree ID="RestartTaskExecution">
+        <Action name="重启任务执行">
+            <Script code="return RestartTaskExecution_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 重启RFID节点 -->
+    <BehaviorTree ID="RestartRFIDNodes">
+        <Action name="重启RFID节点">
+            <Script code="return RestartRFIDNodes_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 重启感知节点 -->
+    <BehaviorTree ID="RestartPerceptionNodes">
+        <Action name="重启感知节点">
+            <Script code="return RestartPerceptionNodes_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 重启导航节点 -->
+    <BehaviorTree ID="RestartNav2Nodes">
+        <Action name="重启导航节点">
+            <Script code="return RestartNav2Nodes_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 导航到Home位置 -->
+    <BehaviorTree ID="NavigateToHomePosition">
+        <Action name="导航到Home位置">
+            <Script code="return NavigateToHomePosition_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 重新初始化所有系统 -->
+    <BehaviorTree ID="ReinitializeAllSystems">
+        <Action name="重新初始化所有系统">
+            <Script code="return ReinitializeAllSystems_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 更新系统状态到就绪 -->
+    <BehaviorTree ID="UpdateSystemStatusToReady">
+        <Action name="更新系统状态到就绪">
+            <Script code="return UpdateSystemStatusToReady_Async();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 升级到L3恢复 -->
+    <BehaviorTree ID="EscalateToL3">
+        <Action name="升级到L3恢复">
+            <Script code="return escalate_to_l3_recovery();" />
+        </Action>
+    </BehaviorTree>
+
+    <!-- 异步动作节点模板 -->
+    <BehaviorTree ID="AsyncActionTemplate">
+        <AsyncAction name="异步动作模板">
+            <Script code="return ASYNC_ACTION_EXECUTE();" />
+        </AsyncAction>
+    </BehaviorTree>
+
+    <!-- 重试机制 -->
+    <BehaviorTree ID="RetryWithTimeout">
+        <RetryUntilSuccessful num_attempts="3">
+            <Timeout duration="10">
+                <Action ID="ActionToRetry" />
+            </Timeout>
+        </RetryUntilSuccessful>
+    </BehaviorTree>
+
+    <!-- 并行执行 -->
+    <BehaviorTree ID="ParallelRecovery">
+        <Parallel name="并行恢复策略" success_threshold="1" failure_threshold="3">
+            <Action ID="RecoveryAction1" />
+            <Action ID="RecoveryAction2" />
+            <Action ID="RecoveryAction3" />
+        </Parallel>
+    </BehaviorTree>
+
+</root>
