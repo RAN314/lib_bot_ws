@@ -18,6 +18,7 @@ from .left_panel import LeftPanel
 from .right_panel import RightPanel
 from .ros2_manager import Ros2Manager
 from .find_book_dialog import FindBookDialog
+from .settings_dialog import SettingsDialog
 
 
 class MainWindow(QMainWindow):
@@ -42,10 +43,18 @@ class MainWindow(QMainWindow):
         # ROS2管理器
         self.ros2_manager = Ros2Manager()
 
-        # 找书对话框
+        # 对话框
         self.find_book_dialog = FindBookDialog(self, self.ros2_manager)
+        self.settings_dialog = None
+
+        # 调试模式状态
+        self.debug_mode_enabled = False
 
         self.setup_ros2_connections()
+
+        # 初始隐藏L1和L2恢复按钮组
+        self.update_l1_recovery_visibility()
+        self.update_l2_recovery_visibility()
 
     def setup_ui(self):
         # 创建主水平分割器
@@ -117,8 +126,20 @@ class MainWindow(QMainWindow):
         # 左侧面板按钮信号
         self.left_panel.find_book_clicked.connect(self.show_find_book_dialog)
         self.left_panel.cancel_clicked.connect(self.on_cancel_clicked)
+        self.left_panel.settings_clicked.connect(self.show_settings_dialog)
         # 删除pause_clicked连接
         self.left_panel.exit_clicked.connect(self.close)
+
+        # L1恢复按钮信号
+        self.left_panel.l1_rfid_recovery_clicked.connect(self.on_l1_rfid_recovery_clicked)
+        self.left_panel.l1_localization_recovery_clicked.connect(self.on_l1_localization_recovery_clicked)
+        self.left_panel.l1_target_redefinition_clicked.connect(self.on_l1_target_redefinition_clicked)
+
+        # L2恢复按钮信号
+        self.left_panel.l2_costmap_recovery_clicked.connect(self.on_l2_costmap_recovery_clicked)
+        self.left_panel.l2_task_reset_recovery_clicked.connect(self.on_l2_task_reset_recovery_clicked)
+        self.left_panel.l2_component_restart_recovery_clicked.connect(self.on_l2_component_restart_recovery_clicked)
+        self.left_panel.l2_home_reset_recovery_clicked.connect(self.on_l2_home_reset_recovery_clicked)
 
         # 对话框信号
         self.find_book_dialog.find_book_confirmed.connect(self.on_find_book_confirmed)
@@ -142,6 +163,35 @@ class MainWindow(QMainWindow):
     def show_find_book_dialog(self):
         """显示找书对话框"""
         self.find_book_dialog.show()
+
+    def show_settings_dialog(self):
+        """显示设置对话框"""
+        if self.settings_dialog is None:
+            self.settings_dialog = SettingsDialog(self)
+
+        # 执行对话框并检查结果
+        result = self.settings_dialog.exec_()
+
+        if result == SettingsDialog.Accepted:
+            # 更新调试模式状态
+            old_debug_mode = self.debug_mode_enabled
+            self.debug_mode_enabled = self.settings_dialog.get_l1_debug_enabled()
+
+            # 如果调试模式状态发生变化，更新UI
+            if old_debug_mode != self.debug_mode_enabled:
+                self.update_l1_recovery_visibility()
+                self.update_l2_recovery_visibility()
+
+                # 记录状态变化
+                status = "启用" if self.debug_mode_enabled else "禁用"
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"🔧 L1/L2恢复调试功能已{status}", "INFO"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"🔧 L1/L2恢复调试功能已{status}", "INFO"
+                    )
 
     def on_find_book_confirmed(self, book_id, guide_patron):
         """找书确认处理"""
@@ -190,6 +240,120 @@ class MainWindow(QMainWindow):
             elif hasattr(self.right_panel, 'add_log_entry'):
                 self.right_panel.add_log_entry("❌ 取消请求发送失败", "ERROR")
 
+    def on_l1_rfid_recovery_clicked(self):
+        """L1 RFID恢复按钮点击处理"""
+        # 使用测试数据触发RFID恢复
+        test_book_id = "test_book_001"
+        test_position = {'x': 1.0, 'y': 2.0, 'z': 0.0}
+
+        self.ros2_manager.trigger_l1_rfid_recovery(test_book_id, test_position)
+
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log(
+                f"🔧 手动触发L1 RFID恢复: {test_book_id}", "INFO"
+            )
+        elif hasattr(self.right_panel, 'add_log_entry'):
+            self.right_panel.add_log_entry(
+                f"🔧 手动触发L1 RFID恢复: {test_book_id}", "INFO"
+            )
+
+    def on_l1_localization_recovery_clicked(self):
+        """L1定位恢复按钮点击处理"""
+        self.ros2_manager.trigger_l1_localization_recovery()
+
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log(
+                "🔧 手动触发L1定位恢复", "INFO"
+            )
+        elif hasattr(self.right_panel, 'add_log_entry'):
+            self.right_panel.add_log_entry(
+                "🔧 手动触发L1定位恢复", "INFO"
+            )
+
+    def on_l1_target_redefinition_clicked(self):
+        """L1目标重定义按钮点击处理"""
+        # 使用测试数据触发目标重定义
+        test_goal = {
+            'book_id': 'test_original_book',
+            'position': {'x': 5.0, 'y': 3.0, 'z': 0.0}
+        }
+
+        self.ros2_manager.trigger_l1_target_redefinition(test_goal)
+
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log(
+                f"🔧 手动触发L1目标重定义: {test_goal['book_id']}", "INFO"
+            )
+        elif hasattr(self.right_panel, 'add_log_entry'):
+            self.right_panel.add_log_entry(
+                f"🔧 手动触发L1目标重定义: {test_goal['book_id']}", "INFO"
+            )
+
+    def on_l2_costmap_recovery_clicked(self):
+        """L2代价地图恢复按钮点击处理"""
+        # 使用测试数据触发L2代价地图恢复
+        test_goal = {'x': 5.0, 'y': 3.0, 'z': 0.0}
+
+        self.ros2_manager.trigger_l2_costmap_recovery(test_goal)
+
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log(
+                f"🔧 手动触发L2代价地图恢复: ({test_goal['x']}, {test_goal['y']})", "INFO"
+            )
+        elif hasattr(self.right_panel, 'add_log_entry'):
+            self.right_panel.add_log_entry(
+                f"🔧 手动触发L2代价地图恢复: ({test_goal['x']}, {test_goal['y']})", "INFO"
+            )
+
+    def on_l2_task_reset_recovery_clicked(self):
+        """L2任务重置恢复按钮点击处理"""
+        # 使用测试数据触发L2任务重置
+        test_task = {
+            'task_id': 'test_task_002',
+            'progress': 60,
+            'books_detected': ['book_001', 'book_002'],
+            'navigation_attempts': 2,
+            'scan_attempts': 4
+        }
+
+        self.ros2_manager.trigger_l2_task_reset_recovery(test_task)
+
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log(
+                f"🔧 手动触发L2任务重置恢复: {test_task['task_id']}", "INFO"
+            )
+        elif hasattr(self.right_panel, 'add_log_entry'):
+            self.right_panel.add_log_entry(
+                f"🔧 手动触发L2任务重置恢复: {test_task['task_id']}", "INFO"
+            )
+
+    def on_l2_component_restart_recovery_clicked(self):
+        """L2组件重启恢复按钮点击处理"""
+        # 使用默认组件列表触发L2组件重启
+        self.ros2_manager.trigger_l2_component_restart_recovery()
+
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log(
+                "🔧 手动触发L2组件重启恢复", "INFO"
+            )
+        elif hasattr(self.right_panel, 'add_log_entry'):
+            self.right_panel.add_log_entry(
+                "🔧 手动触发L2组件重启恢复", "INFO"
+            )
+
+    def on_l2_home_reset_recovery_clicked(self):
+        """L2返回Home重置恢复按钮点击处理"""
+        self.ros2_manager.trigger_l2_home_reset_recovery()
+
+        if hasattr(self.right_panel, 'add_timestamped_log'):
+            self.right_panel.add_timestamped_log(
+                "🔧 手动触发L2返回Home重置恢复", "INFO"
+            )
+        elif hasattr(self.right_panel, 'add_log_entry'):
+            self.right_panel.add_log_entry(
+                "🔧 手动触发L2返回Home重置恢复", "INFO"
+            )
+
     def on_task_status_updated(self, status):
         """处理任务状态更新"""
         # 调试：打印收到的状态
@@ -230,6 +394,115 @@ class MainWindow(QMainWindow):
                     )
                 self._last_logged_status = status_text
 
+        # L1恢复状态处理
+        elif status_text.startswith("l1_"):
+            recovery_type = status.get("recovery_type", "unknown")
+            recovery_status = status.get("recovery_status", "unknown")
+
+            if status_text == "l1_started":
+                self.nav_status.setText(f"🔧 L1恢复: {recovery_type}")
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"🔧 L1恢复开始: {recovery_type}", "INFO"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"🔧 L1恢复开始: {recovery_type}", "INFO"
+                    )
+
+            elif status_text == "l1_in_progress":
+                self.nav_status.setText(f"🔧 L1恢复中: {recovery_type}")
+                # 只在状态变化时记录日志
+                if not hasattr(self, '_last_recovery_status') or self._last_recovery_status != recovery_status:
+                    if hasattr(self.right_panel, 'add_timestamped_log'):
+                        self.right_panel.add_timestamped_log(
+                            f"🔄 L1恢复执行中: {recovery_type}", "INFO"
+                        )
+                    elif hasattr(self.right_panel, 'add_log_entry'):
+                        self.right_panel.add_log_entry(
+                            f"🔄 L1恢复执行中: {recovery_type}", "INFO"
+                        )
+                    self._last_recovery_status = recovery_status
+
+            elif status_text == "l1_recovery_completed":
+                success = status.get("success", False)
+                status_icon = "✅" if success else "❌"
+                status_msg = "成功" if success else "失败"
+
+                self.nav_status.setText(f"🔧 L1恢复: {status_msg}")
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"{status_icon} L1恢复完成: {recovery_type} {status_msg}",
+                        "INFO" if success else "WARN"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"{status_icon} L1恢复完成: {recovery_type} {status_msg}",
+                        "INFO" if success else "WARN"
+                    )
+
+        # L2恢复状态处理
+        elif status_text.startswith("l2_"):
+            recovery_type = status.get("recovery_type", "unknown")
+            recovery_status = status.get("recovery_status", "unknown")
+            recovery_level = status.get("recovery_level", "L2")
+            elapsed_time = status.get("elapsed_time", 0.0)
+
+            if status_text == "l2_started":
+                self.nav_status.setText(f"🔧 {recovery_level}恢复: {recovery_type}")
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"🔧 {recovery_level}恢复开始: {recovery_type}", "INFO"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"🔧 {recovery_level}恢复开始: {recovery_type}", "INFO"
+                    )
+
+            elif status_text == "l2_in_progress":
+                self.nav_status.setText(f"🔧 {recovery_level}恢复中: {recovery_type}")
+                # 只在状态变化时记录日志
+                if not hasattr(self, '_last_l2_recovery_status') or self._last_l2_recovery_status != recovery_status:
+                    if hasattr(self.right_panel, 'add_timestamped_log'):
+                        self.right_panel.add_timestamped_log(
+                            f"🔄 {recovery_level}恢复执行中: {recovery_type} (耗时: {elapsed_time:.1f}s)", "INFO"
+                        )
+                    elif hasattr(self.right_panel, 'add_log_entry'):
+                        self.right_panel.add_log_entry(
+                            f"🔄 {recovery_level}恢复执行中: {recovery_type} (耗时: {elapsed_time:.1f}s)", "INFO"
+                        )
+                    self._last_l2_recovery_status = recovery_status
+
+            elif status_text == "l2_recovery_completed":
+                success = status.get("success", False)
+                duration = status.get("duration", 0.0)
+                status_icon = "✅" if success else "❌"
+                status_msg = "成功" if success else "失败"
+
+                self.nav_status.setText(f"🔧 {recovery_level}恢复: {status_msg}")
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"{status_icon} {recovery_level}恢复完成: {recovery_type} {status_msg} (耗时: {duration:.1f}s)",
+                        "INFO" if success else "WARN"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"{status_icon} {recovery_level}恢复完成: {recovery_type} {status_msg} (耗时: {duration:.1f}s)",
+                        "INFO" if success else "WARN"
+                    )
+
+            elif status_text == "escalated_to_l3":
+                reason = status.get("reason", "未知原因")
+                self.nav_status.setText("⚠️ 升级到L3恢复")
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"⚠️ L2恢复失败，升级到L3: {reason}", "WARN"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"⚠️ L2恢复失败，升级到L3: {reason}", "WARN"
+                    )
+
         # 更新进度到右侧面板
         if hasattr(self.right_panel, "update_task_status"):
             self.right_panel.update_task_status(status)
@@ -262,6 +535,14 @@ class MainWindow(QMainWindow):
         """处理图书信息接收"""
         if hasattr(self.right_panel, "update_book_info"):
             self.right_panel.update_book_info(info)
+
+    def update_l1_recovery_visibility(self):
+        """更新L1恢复按钮组的可见性"""
+        self.left_panel.set_l1_recovery_visible(self.debug_mode_enabled)
+
+    def update_l2_recovery_visibility(self):
+        """更新L2恢复按钮组的可见性"""
+        self.left_panel.set_l2_recovery_visible(self.debug_mode_enabled)
 
     def closeEvent(self, event):
         """窗口关闭时清理资源"""

@@ -16,6 +16,17 @@ class LeftPanel(QWidget):
     logs_clicked = pyqtSignal()
     exit_clicked = pyqtSignal()
 
+    # L1恢复信号
+    l1_rfid_recovery_clicked = pyqtSignal()
+    l1_localization_recovery_clicked = pyqtSignal()
+    l1_target_redefinition_clicked = pyqtSignal()
+
+    # L2恢复信号
+    l2_costmap_recovery_clicked = pyqtSignal()
+    l2_task_reset_recovery_clicked = pyqtSignal()
+    l2_component_restart_recovery_clicked = pyqtSignal()
+    l2_home_reset_recovery_clicked = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.setMinimumWidth(200)
@@ -35,6 +46,12 @@ class LeftPanel(QWidget):
 
         # 系统控制
         self.add_system_group(layout)
+
+        # L1恢复控制
+        self.add_l1_recovery_group(layout)
+
+        # L2恢复控制
+        self.add_l2_recovery_group(layout)
 
         # 添加弹性空间
         layout.addStretch()
@@ -131,6 +148,65 @@ class LeftPanel(QWidget):
 
         layout.addWidget(frame)
 
+    def add_l1_recovery_group(self, layout):
+        """添加L1恢复控制按钮组"""
+        frame = QFrame()
+        frame.setObjectName("l1_recovery_group")
+        frame_layout = QVBoxLayout(frame)
+
+        title = QLabel("L1恢复测试")
+        title.setAlignment(Qt.AlignCenter)
+        frame_layout.addWidget(title)
+
+        self.l1_rfid_recovery_btn = QPushButton("📡 RFID重扫")
+        self.l1_rfid_recovery_btn.setObjectName("l1_rfid_recovery_btn")
+        self.l1_rfid_recovery_btn.setMinimumHeight(35)
+        frame_layout.addWidget(self.l1_rfid_recovery_btn)
+
+        self.l1_localization_recovery_btn = QPushButton("🎯 重定位")
+        self.l1_localization_recovery_btn.setObjectName("l1_localization_recovery_btn")
+        self.l1_localization_recovery_btn.setMinimumHeight(35)
+        frame_layout.addWidget(self.l1_localization_recovery_btn)
+
+        self.l1_target_redefinition_btn = QPushButton("🔄 目标重定义")
+        self.l1_target_redefinition_btn.setObjectName("l1_target_redefinition_btn")
+        self.l1_target_redefinition_btn.setMinimumHeight(35)
+        frame_layout.addWidget(self.l1_target_redefinition_btn)
+
+        layout.addWidget(frame)
+
+    def add_l2_recovery_group(self, layout):
+        """添加L2恢复控制按钮组"""
+        frame = QFrame()
+        frame.setObjectName("l2_recovery_group")
+        frame_layout = QVBoxLayout(frame)
+
+        title = QLabel("L2恢复测试")
+        title.setAlignment(Qt.AlignCenter)
+        frame_layout.addWidget(title)
+
+        self.l2_costmap_recovery_btn = QPushButton("🗺️ 代价地图重置")
+        self.l2_costmap_recovery_btn.setObjectName("l2_costmap_recovery_btn")
+        self.l2_costmap_recovery_btn.setMinimumHeight(35)
+        frame_layout.addWidget(self.l2_costmap_recovery_btn)
+
+        self.l2_task_reset_recovery_btn = QPushButton("📋 任务重置")
+        self.l2_task_reset_recovery_btn.setObjectName("l2_task_reset_recovery_btn")
+        self.l2_task_reset_recovery_btn.setMinimumHeight(35)
+        frame_layout.addWidget(self.l2_task_reset_recovery_btn)
+
+        self.l2_component_restart_recovery_btn = QPushButton("🔧 组件重启")
+        self.l2_component_restart_recovery_btn.setObjectName("l2_component_restart_recovery_btn")
+        self.l2_component_restart_recovery_btn.setMinimumHeight(35)
+        frame_layout.addWidget(self.l2_component_restart_recovery_btn)
+
+        self.l2_home_reset_recovery_btn = QPushButton("🏠 Home重置")
+        self.l2_home_reset_recovery_btn.setObjectName("l2_home_reset_recovery_btn")
+        self.l2_home_reset_recovery_btn.setMinimumHeight(35)
+        frame_layout.addWidget(self.l2_home_reset_recovery_btn)
+
+        layout.addWidget(frame)
+
     def connect_signals(self):
         """连接按钮信号"""
         self.find_book_btn.clicked.connect(self.find_book_clicked.emit)
@@ -143,6 +219,67 @@ class LeftPanel(QWidget):
         self.logs_btn.clicked.connect(self.logs_clicked.emit)
         self.exit_btn.clicked.connect(self.exit_clicked.emit)
 
+        # L1恢复按钮信号
+        self.l1_rfid_recovery_btn.clicked.connect(self.l1_rfid_recovery_clicked.emit)
+        self.l1_localization_recovery_btn.clicked.connect(self.l1_localization_recovery_clicked.emit)
+        self.l1_target_redefinition_btn.clicked.connect(self.l1_target_redefinition_clicked.emit)
+
+        # L2恢复按钮信号
+        self.l2_costmap_recovery_btn.clicked.connect(self.l2_costmap_recovery_clicked.emit)
+        self.l2_task_reset_recovery_btn.clicked.connect(self.l2_task_reset_recovery_clicked.emit)
+        self.l2_component_restart_recovery_btn.clicked.connect(self.l2_component_restart_recovery_clicked.emit)
+        self.l2_home_reset_recovery_btn.clicked.connect(self.l2_home_reset_recovery_clicked.emit)
+
     def get_find_book_button(self):
         """获取找书按钮（供MainWindow连接）"""
         return self.find_book_btn
+
+    def set_l1_recovery_visible(self, visible):
+        """设置L1恢复按钮组的可见性
+
+        Args:
+            visible: 是否显示L1恢复按钮组
+        """
+        # 查找L1恢复组框架
+        for i in range(self.layout().count()):
+            widget = self.layout().itemAt(i).widget()
+            if isinstance(widget, QFrame) and widget.objectName() == "l1_recovery_group":
+                widget.setVisible(visible)
+                break
+
+    def set_l2_recovery_visible(self, visible):
+        """设置L2恢复按钮组的可见性
+
+        Args:
+            visible: 是否显示L2恢复按钮组
+        """
+        # 查找L2恢复组框架
+        for i in range(self.layout().count()):
+            widget = self.layout().itemAt(i).widget()
+            if isinstance(widget, QFrame) and widget.objectName() == "l2_recovery_group":
+                widget.setVisible(visible)
+                break
+
+    def is_l1_recovery_visible(self):
+        """检查L1恢复按钮组是否可见
+
+        Returns:
+            bool: L1恢复按钮组是否可见
+        """
+        for i in range(self.layout().count()):
+            widget = self.layout().itemAt(i).widget()
+            if isinstance(widget, QFrame) and widget.objectName() == "l1_recovery_group":
+                return widget.isVisible()
+        return False
+
+    def is_l2_recovery_visible(self):
+        """检查L2恢复按钮组是否可见
+
+        Returns:
+            bool: L2恢复按钮组是否可见
+        """
+        for i in range(self.layout().count()):
+            widget = self.layout().itemAt(i).widget()
+            if isinstance(widget, QFrame) and widget.objectName() == "l2_recovery_group":
+                return widget.isVisible()
+        return False
