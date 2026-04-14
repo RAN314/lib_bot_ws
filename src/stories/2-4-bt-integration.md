@@ -3,8 +3,8 @@
 > **Epic**: #2 错误处理与恢复机制
 > **Priority**: P0 (Critical)
 > **Points**: 4
-> **Status**: ready-for-dev
-> **Platform**: ROS2 / Python / BehaviorTree.CPP
+> **Status**: review
+> **Platform**: ROS2 / Python / py_trees
 > **Dependencies**: Story 2-1 (L1恢复行为实现), Story 2-2 (L2恢复行为实现), Story 2-3 (错误检测机制实现)
 
 ---
@@ -33,7 +33,7 @@
 - [ ] BT决策时间<100ms
 
 ### 代码质量
-- [ ] 使用BehaviorTree.CPP最佳实践
+- [ ] 使用py_trees最佳实践
 - [ ] 完整的BT节点文档
 - [ ] 支持Groot可视化工具
 
@@ -71,12 +71,8 @@ import threading
 import time
 import os
 
-from behavior_tree import (
-    BehaviorTree,
-    BehaviorTreeManager,
-    NodeStatus,
-    XmlTreeParser
-)
+import py_trees
+from py_trees.common import Status as NodeStatus
 
 from libbot_msgs.msg import BTExecutionStatus, BTNodeStatus
 from libbot_msgs.srv import LoadBehaviorTree, ReloadBehaviorTree
