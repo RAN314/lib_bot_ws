@@ -7,3 +7,10 @@ action_cancel_example/
 tests/
 __pycache__/
 *.pyc
+# Demo数据库文件
+demo_logs.db
+fixed_demo_logs.db
+
+# 日志目录
+logs/
+
