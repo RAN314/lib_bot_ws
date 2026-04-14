@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!-- Recovery Behavior Tree - Error recovery strategies -->
+<root main_tree_to_execute="RecoveryBehaviorTree" BTCPP_format="4">
+
+    <BehaviorTree ID="RecoveryBehaviorTree">
+        <Fallback name="Recovery_Strategy">
+
+            <!-- L1 Fast Recovery -->
+            <Sequence name="L1_Recovery_Attempt">
+                <Condition ID="CanUseL1Recovery" />
+                <Action ID="L1RecoveryNode" />
+            </Sequence>
+
+            <!-- L2 State Reset -->
+            <Sequence name="L2_Recovery_Attempt">
+                <Condition ID="CanUseL2Recovery" />
+                <Action ID="L2RecoveryNode" />
+            </Sequence>
+
+            <!-- L3 System Reset (placeholder) -->
+            <Sequence name="L3_Recovery_Attempt">
+                <Condition ID="CanUseL3Recovery" />
+                <Action ID="PerformSystemCheck" />
+            </Sequence>
+
+            <!-- Human intervention required -->
+            <Action ID="RequestHumanIntervention" />
+
+        </Fallback>
+    </BehaviorTree>
+
+    <!-- Recovery availability checks -->
+
+    <BehaviorTree ID="CanUseL1Recovery">
+        <Condition ID="IsLocalizationLost" />
+    </BehaviorTree>
+
+    <BehaviorTree ID="CanUseL2Recovery">
+        <Condition ID="IsNavigationStuck" />
+    </BehaviorTree>
+
+    <BehaviorTree ID="CanUseL3Recovery">
+        <Condition ID="HasActiveErrors" />
+    </BehaviorTree>
+
+</root>
