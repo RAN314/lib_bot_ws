@@ -1,0 +1,62 @@
+# LibBot 日志系统配置文件
+
+# ROS2日志配置
+ros2:
+  # 支持的日志级别
+  levels: ['DEBUG', 'INFO', 'WARN', 'ERROR']
+  # 最低日志级别
+  min_level: 'INFO'
+  # 是否启用ROS2日志
+  enabled: true
+
+# SQLite日志配置
+sqlite:
+  # 数据库文件路径
+  database_path: 'logs/library.db'
+  # 批量写入大小
+  batch_size: 100
+  # 最大日志保留天数
+  max_log_age: 30
+  # 是否启用SQLite日志
+  enabled: true
+
+# 缓冲区配置
+buffer:
+  # 最大缓冲条目数
+  max_size: 1000
+  # 自动刷新间隔（秒）
+  flush_interval: 5.0
+  # 是否启用缓冲区
+  enabled: true
+
+# 全局配置
+global:
+  # 默认日志级别
+  default_level: 'INFO'
+  # 日志格式
+  log_format: '[{timestamp}] [{level}] [{component}] {message}'
+  # 时区
+  timezone: 'Asia/Shanghai'
+  # 是否启用异步写入
+  async_write: true
+
+# 性能配置
+performance:
+  # 写入超时时间（秒）
+  write_timeout: 10
+  # 查询超时时间（秒）
+  query_timeout: 30
+  # 最大并发写入数
+  max_concurrent_writes: 10
+
+# 监控配置
+monitoring:
+  # 是否启用性能监控
+  enable_performance_monitoring: true
+  # 监控数据保留天数
+  metrics_retention_days: 7
+  # 性能告警阈值
+  alert_thresholds:
+    buffer_utilization: 0.8  # 缓冲区使用率超过80%告警
+    write_latency_ms: 100    # 写入延迟超过100ms告警
+    error_rate_percent: 10   # 错误率超过10%告警
