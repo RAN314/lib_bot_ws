@@ -33,7 +33,7 @@
 - [ ] 恢复过程中保持系统响应性
 
 ### 代码质量
-- [ ] 使用BehaviorTree.CPP实现恢复节点
+- [ ] 使用py_trees实现恢复节点
 - [ ] 错误日志记录完整
 - [ ] 支持配置化恢复参数
 
@@ -58,7 +58,7 @@ src/libbot_tasks/libbot_tasks/
 
 import rclpy
 from rclpy.node import Node
-from behavior_tree import BehaviorTree
+import py_trees
 from typing import Optional
 
 class L1RecoveryBehaviors:
