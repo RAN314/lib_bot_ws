@@ -58,7 +58,7 @@ src/libbot_tasks/libbot_tasks/
 
 import rclpy
 from rclpy.node import Node
-from behavior_tree import BehaviorTree
+import py_trees
 from typing import Optional, Dict, Any
 import time
 
