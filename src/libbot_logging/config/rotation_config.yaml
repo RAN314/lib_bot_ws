@@ -1,0 +1,99 @@
+# 日志轮转配置文件
+# Log Rotation Configuration
+
+# 全局配置
+global:
+  # 检查间隔（秒）
+  check_interval: 3600  # 1小时
+
+  # 启用压缩
+  enable_compression: true
+
+  # 日志目录
+  ros2_log_dir: "/var/log/ros"
+
+  # 数据库路径
+  database_path: "library.db"
+
+# ROS2日志配置
+ros2_logs:
+  # 保留天数
+  retention_days: 7
+
+  # 最大文件大小（字节）
+  max_file_size: 104857600  # 100MB
+
+  # 压缩天数
+  compress_after_days: 3
+
+  # 备份数量
+  backup_count: 5
+
+  # 日志目录
+  log_directory: "/var/log/ros"
+
+# SQLite日志配置
+sqlite_logs:
+  # 保留天数
+  retention_days: 30
+
+  # 最大数据库大小（字节）
+  max_db_size: 524288000  # 500MB
+
+  # 压缩天数
+  compress_after_days: 7
+
+  # 数据库VACUUM阈值（空间回收比例）
+  vacuum_threshold: 0.8
+
+  # 数据库路径
+  database_path: "library.db"
+
+# 压缩配置
+compression:
+  # 启用压缩
+  enabled: true
+
+  # 压缩级别（1-9）
+  compression_level: 6
+
+  # 异步压缩
+  async_compression: true
+
+# 存储监控配置
+storage_monitoring:
+  # 启用存储监控
+  enabled: true
+
+  # 检查间隔（秒）
+  check_interval: 300  # 5分钟
+
+  # 告警阈值（百分比）
+  warning_threshold: 80  # 80%
+  critical_threshold: 90  # 90%
+  emergency_threshold: 95  # 95%
+
+  # 自动清理
+  auto_cleanup_enabled: true
+
+  # 历史数据保留天数
+  history_retention_days: 30
+
+  # 告警冷却时间（秒）
+  alert_cooldown: 3600  # 1小时
+
+# 监控分区配置
+monitor_partitions:
+  - "/"
+  - "/home"
+
+# ROS2参数声明（用于ROS2 param set）
+ros2_parameters:
+  log_rotation.check_interval: 3600
+  log_rotation.ros2_logs.retention_days: 7
+  log_rotation.ros2_logs.max_file_size: 104857600
+  log_rotation.sqlite_logs.retention_days: 30
+  log_rotation.sqlite_logs.max_db_size: 524288000
+  log_rotation.compression.enabled: true
+  log_rotation.storage_monitoring.warning_threshold: 80
+  log_rotation.storage_monitoring.critical_threshold: 90
