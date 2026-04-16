@@ -1,0 +1,51 @@
+# config/monitoring_config.yaml
+
+monitoring:
+  # 监控频率配置
+  frequency: 10.0                    # Hz
+  history_duration: 3600            # 秒
+
+  # 阈值配置
+  thresholds:
+    navigation:
+      amcl_frequency:
+        warning: 5.0
+        error: 3.0
+        critical: 1.0
+      planning_success_rate:
+        warning: 95.0
+        error: 85.0
+        critical: 70.0
+
+    perception:
+      rfid_frequency:
+        warning: 9.0
+        error: 7.0
+        critical: 5.0
+      detection_success_rate:
+        warning: 90.0
+        error: 80.0
+        critical: 60.0
+
+    resource:
+      cpu_usage:
+        warning: 70.0
+        error: 85.0
+        critical: 95.0
+      memory_usage:
+        warning: 1536.0  # MB
+        error: 1792.0
+        critical: 1920.0
+      topic_latency:
+        warning: 50.0    # ms
+        error: 100.0
+        critical: 200.0
+
+# ROS2参数声明
+/**:
+  ros__parameters:
+    monitoring.frequency: 10.0
+    monitoring.history_duration: 3600
+    monitoring.thresholds.navigation.amcl_frequency.warning: 5.0
+    monitoring.thresholds.navigation.amcl_frequency.error: 3.0
+    monitoring.thresholds.navigation.amcl_frequency.critical: 1.0

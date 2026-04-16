@@ -1,0 +1,12 @@
+# Request
+int32 duration_seconds    # 查询历史时长(秒), 0表示当前状态
+
+---
+
+# Response
+string overall_health     # 整体健康状态 (HEALTHY, WARNING, ERROR, CRITICAL)
+HealthMetric[] metrics    # 详细指标数组
+string report_time        # 报告生成时间 (ISO格式)
+string report_json        # 完整报告的JSON格式
+bool success
+string message           # 错误信息(如果有)
