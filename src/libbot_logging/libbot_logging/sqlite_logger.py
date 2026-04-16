@@ -12,6 +12,8 @@ import threading
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 import os
+import logging
+from pathlib import Path
 
 
 class SQLiteLogger:
@@ -37,6 +39,10 @@ class SQLiteLogger:
         # 批量写入队列
         self._write_queue = []
         self._queue_lock = threading.Lock()
+
+        # 日志轮转器
+        self.log_rotator = None
+        self._init_log_rotation(config)
 
     def _init_database(self):
         """初始化数据库表结构"""
@@ -335,3 +341,91 @@ class SQLiteLogger:
     def close(self):
         """关闭日志管理器，确保所有日志都被写入"""
         self.flush()
+
+        # 停止日志轮转
+        if self.log_rotator:
+            self.log_rotator.stop_rotation()
+
+    def _init_log_rotation(self, config: Dict):
+        """初始化日志轮转"""
+        try:
+            # 导入LogRotator
+            from .log_rotator import LogRotator
+
+            # 创建轮转配置
+            rotation_config = {
+                'ros2_log_dir': config.get('ros2_log_dir', '/var/log/ros'),
+                'database_path': self.db_path,
+                'check_interval': config.get('rotation_check_interval', 3600),
+                'enable_compression': config.get('enable_compression', True),
+                'storage_monitoring': {
+                    'warning_threshold': config.get('storage_warning_threshold', 80),
+                    'critical_threshold': config.get('storage_critical_threshold', 90),
+                    'check_interval': config.get('storage_check_interval', 300)
+                }
+            }
+
+            # 创建LogRotator实例
+            self.log_rotator = LogRotator(rotation_config)
+            self.logger = logging.getLogger(__name__)
+
+            self.logger.info(f"日志轮转器初始化完成，数据库路径: {self.db_path}")
+
+        except Exception as e:
+            self.logger = logging.getLogger(__name__)
+            self.logger.warning(f"日志轮转器初始化失败: {str(e)}，将继续运行但不启用自动轮转")
+            self.log_rotator = None
+
+    def start_log_rotation(self):
+        """启动日志轮转"""
+        if self.log_rotator:
+            try:
+                self.log_rotator.start_rotation()
+                self.logger.info("日志轮转已启动")
+            except Exception as e:
+                self.logger.error(f"启动日志轮转失败: {str(e)}")
+
+    def stop_log_rotation(self):
+        """停止日志轮转"""
+        if self.log_rotator:
+            try:
+                self.log_rotator.stop_rotation()
+                self.logger.info("日志轮转已停止")
+            except Exception as e:
+                self.logger.error(f"停止日志轮转失败: {str(e)}")
+
+    def manual_rotate_logs(self, log_type: str = 'sqlite_logs'):
+        """手动触发日志轮转
+
+        Args:
+            log_type: 日志类型 (sqlite_logs/ros2_logs/all)
+        """
+        if self.log_rotator:
+            try:
+                self.log_rotator.manual_rotate(log_type)
+                self.logger.info(f"手动轮转完成: {log_type}")
+            except Exception as e:
+                self.logger.error(f"手动轮转失败: {str(e)}")
+
+    def manual_cleanup_logs(self, log_type: str = 'sqlite_logs'):
+        """手动触发日志清理
+
+        Args:
+            log_type: 日志类型 (sqlite_logs/ros2_logs/all)
+        """
+        if self.log_rotator:
+            try:
+                self.log_rotator.manual_cleanup(log_type)
+                self.logger.info(f"手动清理完成: {log_type}")
+            except Exception as e:
+                self.logger.error(f"手动清理失败: {str(e)}")
+
+    def get_storage_info(self) -> Dict:
+        """获取存储信息"""
+        if self.log_rotator and hasattr(self.log_rotator, 'storage_monitor'):
+            try:
+                return self.log_rotator.storage_monitor.get_storage_usage()
+            except Exception as e:
+                self.logger.error(f"获取存储信息失败: {str(e)}")
+                return {}
+        return {}

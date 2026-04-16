@@ -14,6 +14,9 @@ from .ros2_logger import ROS2Logger
 from .sqlite_logger import SQLiteLogger
 from .log_buffer import LogBuffer
 from .query_interface import QueryInterface
+from .config_loader import load_logging_config, ConfigLoader
+from .compression_utils import CompressionUtils
+from .storage_monitor import StorageMonitor
 
 __version__ = "0.1.0"
 __all__ = [
@@ -21,5 +24,9 @@ __all__ = [
     'ROS2Logger',
     'SQLiteLogger',
     'LogBuffer',
-    'QueryInterface'
+    'QueryInterface',
+    'load_logging_config',
+    'ConfigLoader',
+    'CompressionUtils',
+    'StorageMonitor'
 ]
