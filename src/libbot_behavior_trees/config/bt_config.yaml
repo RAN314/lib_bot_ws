@@ -1,0 +1,43 @@
+# Behavior Tree Configuration
+
+# Tree execution parameters
+execution:
+  default_tick_rate: 10.0          # Default execution frequency (Hz)
+  max_execution_time: 0.1          # Maximum execution time per tick (s)
+  error_retry_count: 3             # Number of error retries
+
+# Node timeout configurations
+node_timeouts:
+  navigation_nodes: 30.0           # Navigation node timeout (s)
+  perception_nodes: 10.0           # Perception node timeout (s)
+  recovery_nodes: 60.0             # Recovery node timeout (s)
+  database_nodes: 5.0              # Database node timeout (s)
+
+# Groot visualization configuration
+groot:
+  enable: true                     # Enable Groot support
+  port: 1666                       # Groot communication port
+  update_frequency: 2.0            # Update frequency (Hz)
+
+# Debug configuration
+debug:
+  enable_visualization: true       # Enable visualization
+  publish_tree_status: true        # Publish tree status
+  log_node_execution: true         # Log node execution
+
+# Tree-specific configurations
+trees:
+  main_tree:
+    auto_start: true
+    auto_restart: false
+    tick_rate: 10.0
+
+  recovery_tree:
+    auto_start: false
+    auto_restart: false
+    tick_rate: 10.0
+
+  findbook_tree:
+    auto_start: false
+    auto_restart: true
+    tick_rate: 10.0

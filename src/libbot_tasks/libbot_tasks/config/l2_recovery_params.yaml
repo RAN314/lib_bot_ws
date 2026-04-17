@@ -1,0 +1,251 @@
+# L2恢复参数配置文件
+# 任务层面重置，30-40秒恢复时间
+
+recovery:
+  l2:
+    # L2恢复基本参数
+    timeout_seconds: 40               # 总超时时间（秒）
+    max_consecutive_failures: 2       # 最大连续失败次数
+
+    # 代价地图清除参数
+    costmap_clear:
+      global_timeout: 15.0            # 全局代价地图清除超时
+      local_timeout: 10.0             # 局部代价地图清除超时
+      replan_timeout: 15.0            # 重新规划超时
+      retry_attempts: 2               # 重试次数
+
+    # 任务重置参数
+    task_reset:
+      context_save_timeout: 5.0       # 上下文保存超时
+      reset_timeout: 10.0             # 重置超时
+      restore_timeout: 5.0            # 上下文恢复超时
+      max_context_size: 1024          # 最大上下文数据大小(KB)
+
+    # 组件重启参数
+    component_restart:
+      critical_components:            # 关键组件列表
+        - "rfid_processor"
+        - "perception_manager"
+        - "sensor_fusion"
+        - "localization_node"
+      navigation_components:          # 导航组件列表
+        - "nav2_bringup"
+        - "amcl"
+        - "dwb_controller"
+        - "map_server"
+      restart_timeout: 20.0           # 单个组件重启超时
+      restart_delay: 2.0              # 组件间重启延迟
+      health_check_interval: 5.0      # 健康检查间隔
+
+    # Home重置参数
+    home_reset:
+      home_position:                  # Home位置坐标
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        yaw: 0.0
+      navigation_timeout: 25.0        # 返回Home超时
+      reinit_timeout: 15.0            # 重新初始化超时
+      safety_margin: 0.5              # 安全边界距离
+
+    # 监控参数
+    monitoring:
+      check_interval: 1.0             # 状态检查间隔
+      max_recovery_time: 45.0         # 最大恢复时间
+      log_level: "INFO"               # 日志级别
+
+    # 升级策略
+    escalation:
+      auto_escalate: true             # 是否自动升级到L3
+      escalation_delay: 2.0           # 升级延迟时间
+      notify_on_escalation: true      # 升级时是否通知
+
+# 组件定义
+components:
+  rfid_processor:
+    name: "RFID Processor"
+    restart_command: "systemctl restart rfid_processor"
+    health_check: "/rfid/health"
+    timeout: 15.0
+
+  perception_manager:
+    name: "Perception Manager"
+    restart_command: "systemctl restart perception_manager"
+    health_check: "/perception/health"
+    timeout: 20.0
+
+  sensor_fusion:
+    name: "Sensor Fusion"
+    restart_command: "systemctl restart sensor_fusion"
+    health_check: "/sensor_fusion/health"
+    timeout: 10.0
+
+  localization_node:
+    name: "Localization Node"
+    restart_command: "ros2 lifecycle set /amcl configure && ros2 lifecycle set /amcl activate"
+    health_check: "/localization/health"
+    timeout: 25.0
+
+  nav2_bringup:
+    name: "Nav2 Bringup"
+    restart_command: "ros2 launch nav2_bringup navigation_launch.py"
+    health_check: "/navigation/health"
+    timeout: 30.0
+
+  amcl:
+    name: "AMCL"
+    restart_command: "ros2 lifecycle set /amcl restart"
+    health_check: "/amcl/health"
+    timeout: 20.0
+
+  dwb_controller:
+    name: "DWB Controller"
+    restart_command: "ros2 lifecycle set /dwb_controller restart"
+    health_check: "/dwb/health"
+    timeout: 15.0
+
+  map_server:
+    name: "Map Server"
+    restart_command: "ros2 lifecycle set /map_server restart"
+    health_check: "/map_server/health"
+    timeout: 10.0
+
+# 恢复策略配置
+strategies:
+  costmap_clear:
+    priority: 1
+    conditions:
+      - "navigation_stuck"
+      - "path_blocked"
+      - "localization_drift"
+    actions:
+      - "clear_global_costmap"
+      - "clear_local_costmap"
+      - "replan_path"
+
+  task_reset:
+    priority: 2
+    conditions:
+      - "task_corrupted"
+      - "progress_stalled"
+      - "context_invalid"
+    actions:
+      - "save_context"
+      - "reset_state"
+      - "restore_context"
+      - "restart_task"
+
+  component_restart:
+    priority: 3
+    conditions:
+      - "component_unhealthy"
+      - "service_unavailable"
+      - "node_crashed"
+    actions:
+      - "identify_failing_components"
+      - "restart_critical_components"
+      - "restart_navigation_components"
+      - "verify_component_health"
+
+  home_reset:
+    priority: 4
+    conditions:
+      - "all_strategies_failed"
+      - "system_unstable"
+      - "localization_lost"
+    actions:
+      - "navigate_to_home"
+      - "reinitialize_systems"
+      - "update_status"
+
+# 超时配置
+timeouts:
+  service_call: 5.0
+  action_call: 30.0
+  component_restart: 20.0
+  full_recovery: 40.0
+  escalation: 2.0
+
+# 日志配置
+logging:
+  level: "INFO"
+  file: "/var/log/libbot/l2_recovery.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# ROS2参数声明（用于参数服务器）
+/**:
+  ros__parameters:
+    recovery.l2.timeout_seconds: 40
+    recovery.l2.max_consecutive_failures: 2
+    recovery.l2.costmap_clear.global_timeout: 15.0
+    recovery.l2.costmap_clear.local_timeout: 10.0
+    recovery.l2.costmap_clear.replan_timeout: 15.0
+    recovery.l2.costmap_clear.retry_attempts: 2
+    recovery.l2.task_reset.context_save_timeout: 5.0
+    recovery.l2.task_reset.reset_timeout: 10.0
+    recovery.l2.task_reset.restore_timeout: 5.0
+    recovery.l2.task_reset.max_context_size: 1024
+    recovery.l2.component_restart.restart_timeout: 20.0
+    recovery.l2.component_restart.restart_delay: 2.0
+    recovery.l2.component_restart.health_check_interval: 5.0
+    recovery.l2.home_reset.navigation_timeout: 25.0
+    recovery.l2.home_reset.reinit_timeout: 15.0
+    recovery.l2.home_reset.safety_margin: 0.5
+    recovery.l2.monitoring.check_interval: 1.0
+    recovery.l2.monitoring.max_recovery_time: 45.0
+    recovery.l2.monitoring.log_level: "INFO"
+    recovery.l2.escalation.auto_escalate: true
+    recovery.l2.escalation.escalation_delay: 2.0
+    recovery.l2.escalation.notify_on_escalation: true
+
+    # 超时参数
+    timeouts.service_call: 5.0
+    timeouts.action_call: 30.0
+    timeouts.component_restart: 20.0
+    timeouts.full_recovery: 40.0
+    timeouts.escalation: 2.0
+
+    # 日志参数
+    logging.level: "INFO"
+    logging.file: "/var/log/libbot/l2_recovery.log"
+    logging.max_size: 10485760
+    logging.backup_count: 5
+
+# 验证规则
+validation:
+  parameter_ranges:
+    timeout_seconds: [10, 120]        # 10秒到2分钟
+    max_consecutive_failures: [1, 5]  # 1到5次
+    restart_timeout: [5, 60]          # 5秒到1分钟
+    navigation_timeout: [10, 180]     # 10秒到3分钟
+
+  required_parameters:
+    - "recovery.l2.timeout_seconds"
+    - "recovery.l2.max_consecutive_failures"
+    - "recovery.l2.costmap_clear.global_timeout"
+    - "recovery.l2.costmap_clear.local_timeout"
+    - "recovery.l2.home_reset.navigation_timeout"
+
+# 默认Home位置（如果未配置）
+default_home_position:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  yaw: 0.0
+
+# 性能目标
+performance_targets:
+  max_recovery_time: 40.0            # 最大恢复时间
+  min_success_rate: 0.85             # 最小成功率85%
+  max_cpu_usage: 0.70                # 最大CPU使用率70%
+  max_memory_usage: 512              # 最大内存使用512MB
+
+# 调试配置
+debug:
+  enabled: false
+  verbose_logging: false
+  performance_monitoring: false
+  simulate_failures: false
+  failure_rate: 0.1                  # 10%失败率用于测试

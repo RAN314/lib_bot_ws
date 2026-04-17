@@ -1,0 +1,75 @@
+# TurtleBot3 Waffle Pi 仿真配置
+# 适用于图书馆机器人仿真环境
+
+# 机器人描述参数
+turtlebot3:
+  ros__parameters:
+    # 机器人模型配置
+    model: 'waffle_pi'
+
+    # 传感器配置
+    sensors:
+      lidar:
+        enabled: true
+        frame_id: 'base_scan'
+        topic: '/scan'
+        update_rate: 10.0
+
+      camera:
+        enabled: true
+        frame_id: 'camera_link'
+        topic: '/camera/image'
+        update_rate: 10.0
+
+    # 运动控制参数
+    diff_drive_controller:
+      ros__parameters:
+        left_wheel_names: ['wheel_left_joint']
+        right_wheel_names: ['wheel_right_joint']
+        wheel_separation: 0.287
+        wheel_radius: 0.033
+
+        # 速度限制
+        linear:
+          x:
+            max_velocity: 0.26    # m/s
+            min_velocity: -0.26
+            max_acceleration: 0.5
+            min_acceleration: -0.5
+
+        angular:
+          z:
+            max_velocity: 1.82    # rad/s
+            min_velocity: -1.82
+            max_acceleration: 1.5
+            min_acceleration: -1.5
+
+# Gazebo仿真参数
+gazebo:
+  ros__parameters:
+    # 仿真时间配置
+    use_sim_time: true
+
+    # 物理引擎参数
+    physics:
+      max_step_size: 0.001
+      real_time_factor: 1.0
+      real_time_update_rate: 1000
+
+    # 传感器噪声模型
+    sensor_noise:
+      lidar:
+        range_noise: 0.01        # 1cm测距噪声
+        angle_noise: 0.001       # 角度噪声(rad)
+
+      imu:
+        gyro_noise: 0.005         # 陀螺仪噪声
+        accel_noise: 0.05         # 加速度计噪声
+
+# RFID传感器配置 (待实现)
+rfid_sensor:
+  ros__parameters:
+    enabled: false  # 暂时禁用，等待RFID插件实现
+    update_rate: 10.0
+    detection_range: 0.5
+    directions: ['front', 'back', 'left', 'right']

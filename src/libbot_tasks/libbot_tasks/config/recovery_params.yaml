@@ -1,0 +1,196 @@
+# L1恢复参数配置文件
+# 图书馆机器人ROS2项目 - Epic 2错误处理与恢复机制
+
+# ===========================================
+# L1快速恢复参数配置
+# 恢复时间: 5-10秒
+# 重试次数: 最多3次
+# ===========================================
+
+recovery:
+  l1:
+    # L1恢复基础参数
+    max_retries: 3                    # 最大重试次数
+    timeout_seconds: 10               # 超时时间（秒）
+
+    # 日志级别设置
+    logging:
+      level: "INFO"                  # 日志级别: DEBUG, INFO, WARN, ERROR
+      enable_detailed_timing: true    # 启用详细时间记录
+      log_to_file: true              # 是否记录到文件
+
+    # RFID重新扫描参数
+    rfid_rescan:
+      scan_duration: 5.0              # 重新扫描持续时间（秒）
+      required_confidence: 0.8        # 检测置信度阈值 (0.0-1.0)
+      scan_attempts: 3                # 单次扫描尝试次数
+      wait_time_between_scans: 0.5    # 扫描间隔等待时间（秒）
+
+      # RFID传感器配置
+      sensor_config:
+        front_sensor: true            # 启用前方RFID传感器
+        back_sensor: false            # 禁用后方RFID传感器
+        left_sensor: false            # 禁用左方RFID传感器
+        right_sensor: false           # 禁用右方RFID传感器
+
+      # 扫描策略
+      scan_strategy: "sequential"     # 扫描策略: sequential, parallel, adaptive
+
+    # 重新定位参数
+    relocalization:
+      rotation_speed: 0.3             # 旋转速度(rad/s)
+      total_rotation: 6.28            # 总旋转角度(2π = 360度)
+      min_accuracy: 0.1               # 最小定位精度(m)
+
+      # 旋转控制参数
+      acceleration_limit: 0.2         # 角加速度限制(rad/s²)
+      deceleration_distance: 0.5      # 减速距离(rad)
+
+      # 定位验证参数
+      amcl_validation:
+        required_particles: 1000      # 所需最小粒子数
+        max_covariance: 0.05          # 最大协方差阈值
+        convergence_threshold: 0.8    # 收敛阈值
+
+      # 重试策略
+      retry_strategy: "progressive"   # 重试策略: fixed, progressive, adaptive
+      progressive_speed_increase: 0.1 # 渐进速度增量
+
+    # 目标重定义参数
+    target_redefinition:
+      search_radius: 2.0              # 搜索半径(m)
+      max_alternatives: 5             # 最大备选目标数
+
+      # 搜索策略
+      search_strategy: "priority_based"  # 搜索策略: distance, priority, availability
+
+      # 优先级权重
+      priority_weights:
+        distance: 0.4                # 距离权重
+        availability: 0.3            # 可用性权重
+        task_importance: 0.3         # 任务重要性权重
+
+      # 替代目标筛选条件
+      selection_criteria:
+        max_distance_ratio: 1.5      # 最大距离比率（相对于原目标）
+        min_availability_score: 0.6  # 最小可用性分数
+        exclude_uncertain: true      # 排除不确定性目标
+
+# ===========================================
+# ROS2参数声明
+# 用于ROS2参数自动配置
+# ===========================================
+/**:
+  ros__parameters:
+    recovery.l1.max_retries: 3
+    recovery.l1.timeout_seconds: 10
+
+    recovery.l1.logging.level: "INFO"
+    recovery.l1.logging.enable_detailed_timing: true
+    recovery.l1.logging.log_to_file: true
+
+    recovery.l1.rfid_rescan.scan_duration: 5.0
+    recovery.l1.rfid_rescan.required_confidence: 0.8
+    recovery.l1.rfid_rescan.scan_attempts: 3
+    recovery.l1.rfid_rescan.wait_time_between_scans: 0.5
+    recovery.l1.rfid_rescan.sensor_config.front_sensor: true
+    recovery.l1.rfid_rescan.sensor_config.back_sensor: false
+    recovery.l1.rfid_rescan.sensor_config.left_sensor: false
+    recovery.l1.rfid_rescan.sensor_config.right_sensor: false
+    recovery.l1.rfid_rescan.scan_strategy: "sequential"
+
+    recovery.l1.relocalization.rotation_speed: 0.3
+    recovery.l1.relocalization.total_rotation: 6.28
+    recovery.l1.relocalization.min_accuracy: 0.1
+    recovery.l1.relocalization.acceleration_limit: 0.2
+    recovery.l1.relocalization.deceleration_distance: 0.5
+    recovery.l1.relocalization.amcl_validation.required_particles: 1000
+    recovery.l1.relocalization.amcl_validation.max_covariance: 0.05
+    recovery.l1.relocalization.amcl_validation.convergence_threshold: 0.8
+    recovery.l1.relocalization.retry_strategy: "progressive"
+    recovery.l1.relocalization.progressive_speed_increase: 0.1
+
+    recovery.l1.target_redefinition.search_radius: 2.0
+    recovery.l1.target_redefinition.max_alternatives: 5
+    recovery.l1.target_redefinition.search_strategy: "priority_based"
+    recovery.l1.target_redefinition.priority_weights.distance: 0.4
+    recovery.l1.target_redefinition.priority_weights.availability: 0.3
+    recovery.l1.target_redefinition.priority_weights.task_importance: 0.3
+    recovery.l1.target_redefinition.selection_criteria.max_distance_ratio: 1.5
+    recovery.l1.target_redefinition.selection_criteria.min_availability_score: 0.6
+    recovery.l1.target_redefinition.selection_criteria.exclude_uncertain: true
+
+# ===========================================
+# 配置验证规则
+# 用于参数验证和范围检查
+# ===========================================
+config_validation:
+  recovery.l1:
+    max_retries:
+      min: 1
+      max: 5
+      type: "integer"
+
+    timeout_seconds:
+      min: 5.0
+      max: 30.0
+      type: "float"
+
+    rfid_rescan:
+      scan_duration:
+        min: 1.0
+        max: 10.0
+        type: "float"
+      required_confidence:
+        min: 0.0
+        max: 1.0
+        type: "float"
+
+    relocalization:
+      rotation_speed:
+        min: 0.1
+        max: 1.0
+        type: "float"
+      min_accuracy:
+        min: 0.01
+        max: 1.0
+        type: "float"
+
+    target_redefinition:
+      search_radius:
+        min: 0.5
+        max: 10.0
+        type: "float"
+      max_alternatives:
+        min: 1
+        max: 10
+        type: "integer"
+
+# ===========================================
+# 环境特定配置
+# 可以根据不同环境覆盖默认配置
+# ===========================================
+
+# 开发环境配置
+environment.dev:
+  recovery.l1:
+    timeout_seconds: 15               # 开发环境延长超时时间
+    logging:
+      level: "DEBUG"                  # 开发环境使用DEBUG级别
+      enable_detailed_timing: true
+
+# 测试环境配置
+environment.test:
+  recovery.l1:
+    timeout_seconds: 8                # 测试环境缩短超时时间
+    logging:
+      level: "INFO"
+      log_to_file: false              # 测试环境不记录到文件
+
+# 演示环境配置
+environment.demo:
+  recovery.l1:
+    timeout_seconds: 12               # 演示环境适度超时时间
+    logging:
+      level: "WARN"                   # 演示环境只记录警告以上
+      enable_detailed_timing: false   # 演示环境不记录详细时间

@@ -1,0 +1,77 @@
+# config/bt_config.yaml
+
+behavior_trees:
+  # 主行为树配置
+  main_bt:
+    file: "behaviors/main_bt.xml"
+    auto_start: true
+    auto_restart: false
+    tick_rate: 10.0
+
+  # 恢复行为树配置
+  recovery_bt:
+    file: "behaviors/recovery_bt.xml"
+    auto_start: false
+    auto_restart: false
+    tick_rate: 10.0
+
+  # FindBook行为树配置
+  findbook_bt:
+    file: "behaviors/findbook_bt.xml"
+    auto_start: false
+    auto_restart: true
+    tick_rate: 10.0
+
+# BT执行参数
+execution:
+  default_tick_rate: 10.0          # 默认执行频率(Hz)
+  max_execution_time: 0.1          # 最大执行时间(s)
+  error_retry_count: 3             # 错误重试次数
+
+# 节点超时配置
+node_timeouts:
+  navigation_nodes: 30.0           # 导航节点超时(s)
+  perception_nodes: 10.0           # 感知节点超时(s)
+  recovery_nodes: 60.0             # 恢复节点超时(s)
+  database_nodes: 5.0              # 数据库节点超时(s)
+
+# 调试配置
+debug:
+  enable_visualization: true       # 启用可视化
+  publish_tree_status: true        # 发布树状态
+  log_node_execution: true         # 记录节点执行
+
+# Groot集成配置
+groot:
+  enable: true                     # 启用Groot支持
+  port: 1666                       # Groot通信端口
+  update_frequency: 2.0            # 更新频率(Hz)
+  publish_execution_flow: true     # 发布执行流程
+  publish_tree_structure: true     # 发布树结构
+  publish_node_states: true        # 发布节点状态
+
+# ROS2参数声明
+/**:
+  ros__parameters:
+    behavior_trees.main_bt.auto_start: true
+    behavior_trees.main_bt.auto_restart: false
+    behavior_trees.main_bt.tick_rate: 10.0
+    behavior_trees.recovery_bt.auto_start: false
+    behavior_trees.recovery_bt.auto_restart: false
+    behavior_trees.recovery_bt.tick_rate: 10.0
+    behavior_trees.findbook_bt.auto_start: false
+    behavior_trees.findbook_bt.auto_restart: true
+    behavior_trees.findbook_bt.tick_rate: 10.0
+    execution.default_tick_rate: 10.0
+    execution.max_execution_time: 0.1
+    execution.error_retry_count: 3
+    node_timeouts.navigation_nodes: 30.0
+    node_timeouts.perception_nodes: 10.0
+    node_timeouts.recovery_nodes: 60.0
+    node_timeouts.database_nodes: 5.0
+    debug.enable_visualization: true
+    debug.publish_tree_status: true
+    debug.log_node_execution: true
+    groot.enable: true
+    groot.update_frequency: 2.0
+    groot.publish_execution_flow: true

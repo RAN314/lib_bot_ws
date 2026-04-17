@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!-- FindBook Behavior Tree - Book finding task implementation -->
+<root main_tree_to_execute="FindBookBehaviorTree" BTCPP_format="4">
+
+    <BehaviorTree ID="FindBookBehaviorTree">
+        <Sequence name="FindBook_Task_Execution">
+
+            <!-- 1. Task initialization -->
+            <Action ID="PerformSystemCheck" />
+
+            <!-- 2. Book validation -->
+            <Sequence name="Book_Validation">
+                <Condition ID="IsBookAvailable" />
+                <Condition ID="IsLocalizationLost" />
+            </Sequence>
+
+            <!-- 3. Navigation to target -->
+            <Action ID="NavigateToBookshelf" />
+
+            <!-- 4. Book scanning -->
+            <Action ID="ScanForBook" />
+
+            <!-- 5. Result handling -->
+            <Fallback name="Result_Handling">
+
+                <!-- Book found successfully -->
+                <Sequence name="Book_Found_Success">
+                    <Condition ID="HasActiveErrors" />
+                    <Action ID="UpdateDatabase" />
+                </Sequence>
+
+                <!-- Book not found, try recovery -->
+                <Sequence name="Book_Not_Found_Recovery">
+                    <Action ID="L1RecoveryNode" />
+                </Sequence>
+
+            </Fallback>
+
+            <!-- 6. Task completion -->
+            <Action ID="EnterIdleState" />
+
+        </Sequence>
+    </BehaviorTree>
+
+</root>

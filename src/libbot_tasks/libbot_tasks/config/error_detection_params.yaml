@@ -1,0 +1,52 @@
+# config/error_detection_params.yaml
+
+detection:
+  # 检测频率
+  detection_frequency: 10.0          # Hz
+
+  # 定位检测参数
+  localization:
+    covariance_threshold: 0.5         # 协方差阈值
+    drift_velocity_threshold: 2.0     # 漂移速度阈值(m/s)
+    lost_timeout: 5.0                 # 定位丢失超时(秒)
+    history_size: 10                  # 历史记录大小
+
+  # 导航检测参数
+  navigation:
+    stuck_timeout: 30.0              # 卡住超时(秒)
+    planning_timeout: 10.0            # 规划超时(秒)
+    collision_distance_threshold: 0.3 # 碰撞距离阈值(m)
+    goal_unreachable_timeout: 60.0    # 目标不可达超时(秒)
+
+  # 感知检测参数
+  perception:
+    rfid_timeout: 5.0                # RFID检测超时(秒)
+    detection_confidence_threshold: 0.7 # 检测置信度阈值
+    sensor_health_check_interval: 2.0 # 传感器健康检查间隔(秒)
+
+  # 系统检测参数
+  system:
+    node_health_timeout: 10.0        # 节点健康超时(秒)
+    memory_usage_threshold: 0.9      # 内存使用率阈值
+    cpu_usage_threshold: 0.8         # CPU使用率阈值
+    communication_timeout: 2.0       # 通信超时(秒)
+
+# ROS2参数声明
+/**:
+  ros__parameters:
+    detection.detection_frequency: 10.0
+    detection.localization.covariance_threshold: 0.5
+    detection.localization.drift_velocity_threshold: 2.0
+    detection.localization.lost_timeout: 5.0
+    detection.localization.history_size: 10
+    detection.navigation.stuck_timeout: 30.0
+    detection.navigation.planning_timeout: 10.0
+    detection.navigation.collision_distance_threshold: 0.3
+    detection.navigation.goal_unreachable_timeout: 60.0
+    detection.perception.rfid_timeout: 5.0
+    detection.perception.detection_confidence_threshold: 0.7
+    detection.perception.sensor_health_check_interval: 2.0
+    detection.system.node_health_timeout: 10.0
+    detection.system.memory_usage_threshold: 0.9
+    detection.system.cpu_usage_threshold: 0.8
+    detection.system.communication_timeout: 2.0
