@@ -35,7 +35,11 @@ class RFIDSensorNode(Node):
         self.config = self._load_config(config_file)
 
         # 初始化RFID噪声模拟器
-        self.rfid_simulator = RFIDNoiseSimulator(self.config.get('noise_model', {}))
+        noise_config = self.config.get('noise_model', {})
+        # 确保包含默认方向配置
+        if 'directions' not in noise_config:
+            noise_config['directions'] = self.config.get('sensor', {}).get('directions', ['front', 'back', 'left', 'right'])
+        self.rfid_simulator = RFIDNoiseSimulator(noise_config)
 
         # 四向RFID发布器
         self.publishers = {}

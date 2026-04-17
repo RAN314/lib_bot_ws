@@ -79,8 +79,10 @@ class RFIDDirectionNoiseModel:
         # 距离-概率曲线 (指数衰减)
         distance_factor = math.exp(-self.config.get('distance_decay_factor', 2.0) * distance)
 
-        # 角度敏感度
-        angle_factor = math.cos(angle) ** self.config.get('angle_sensitivity', 0.8)
+        # 角度敏感度 (确保角度在有效范围内)
+        cos_angle = max(-1.0, min(1.0, math.cos(angle)))
+        # 确保角度因子为非负数，避免复数结果
+        angle_factor = max(0.0, cos_angle) ** self.config.get('angle_sensitivity', 0.8)
 
         # 环境噪声影响
         noise_factor = 1.0 - self.config.get('environment_noise', 0.1)
@@ -153,11 +155,11 @@ class RFIDNoiseSimulator:
             'base_detection_range': 0.5,
             'false_negative_rate': 0.15,    # 15%漏检率
             'false_positive_rate': 0.05,    # 5%误检率
-            'distance_decay_factor': 2.0,
-            'angle_sensitivity': 0.8,
-            'environment_noise': 0.1,
+            'distance_decay_factor': 0.8,   # 降低衰减因子，提高检测率
+            'angle_sensitivity': 0.6,
+            'environment_noise': 0.03,      # 降低环境噪声
             'scan_frequency': 10.0,         # 10Hz扫描频率
-            'min_signal_strength': 0.1      # 最小可检测信号强度
+            'min_signal_strength': 0.03     # 降低最小信号强度
         }
 
     def _init_noise_models(self):
