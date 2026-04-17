@@ -11,10 +11,13 @@ from rclpy.duration import Duration
 import threading
 import time
 import math
+import yaml
+import os
 from typing import List, Dict, Tuple, Optional
 
 from libbot_msgs.msg import RFIDScan
 from geometry_msgs.msg import Pose, Point
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_msgs.msg import Header
 
 from .rfid_noise_model import RFIDNoiseSimulator, DetectionResult
@@ -42,13 +45,14 @@ class RFIDSensorNode(Node):
         self.rfid_simulator = RFIDNoiseSimulator(noise_config)
 
         # 四向RFID发布器
-        self.publishers = {}
+        self._rfid_publishers = {}
         self._setup_publishers()
 
         # 机器人状态
         self.robot_pose = (0.0, 0.0, 0.0)  # (x, y, theta)
         self.robot_moving = False
         self.last_update_time = time.time()
+        self.pose_received = False  # 标记是否收到有效位姿
 
         # 场景RFID标签数据库
         self.rfid_tags = []
@@ -67,17 +71,27 @@ class RFIDSensorNode(Node):
             self._status_callback
         )
 
-        # 订阅机器人位姿（模拟）
+        # 订阅机器人位姿 - 支持多种位姿源
         self.pose_subscription = self.create_subscription(
             Pose,
-            '/robot_pose',  # 假设的位姿话题
+            '/robot_pose',  # 来自Gazebo的位姿
             self._pose_callback,
+            10
+        )
+
+        # 订阅AMCL定位结果（用于导航系统集成）
+        self.amcl_pose_subscription = self.create_subscription(
+            PoseWithCovarianceStamped,
+            '/amcl_pose',  # AMCL定位结果
+            self._amcl_pose_callback,
             10
         )
 
         self.get_logger().info("RFID传感器节点启动完成")
         self.get_logger().info(f"扫描频率: {1.0/scan_interval:.1f} Hz")
-        self.get_logger().info(f"检测方向: {list(self.publishers.keys())}")
+        self.get_logger().info(f"检测方向: {list(self._rfid_publishers.keys())}")
+        self.get_logger().info("位姿源: /robot_pose (Gazebo) 和 /amcl_pose (导航定位)")
+        self.get_logger().info("模式: 支持无位姿运行（使用默认位置）")
 
     def _load_config(self, config_file: str = None) -> Dict:
         """加载配置文件"""
@@ -98,18 +112,27 @@ class RFIDSensorNode(Node):
                 'directions': ['front', 'back', 'left', 'right'],
                 'publish_frame_id': 'rfid_sensor'
             },
-            'tags': {
-                'database_file': 'library_tags.db',
-                'default_power': 1.0
+            'rfid_tags': {
+                'predefined_tags': []
             }
         }
 
-        # TODO: 从YAML文件加载配置
-        # if config_file:
-        #     with open(config_file, 'r') as f:
-        #         file_config = yaml.safe_load(f)
-        #     # 合并配置
-        #     default_config.update(file_config)
+        # 从YAML文件加载配置
+        if config_file and os.path.exists(config_file):
+            try:
+                with open(config_file, 'r') as f:
+                    file_config = yaml.safe_load(f)
+                if file_config:
+                    # 合并配置
+                    if 'rfid_noise_model' in file_config:
+                        default_config['noise_model'].update(file_config['rfid_noise_model'])
+                    if 'rfid_sensor' in file_config:
+                        default_config['sensor'].update(file_config['rfid_sensor'])
+                    if 'rfid_tags' in file_config:
+                        default_config['rfid_tags'] = file_config['rfid_tags']
+                    self.get_logger().info(f'成功加载配置文件: {config_file}')
+            except Exception as e:
+                self.get_logger().warn(f'加载配置文件失败: {e}, 使用默认配置')
 
         return default_config
 
@@ -124,32 +147,47 @@ class RFIDSensorNode(Node):
                 topic_name,
                 10
             )
-            self.publishers[direction] = publisher
+            self._rfid_publishers[direction] = publisher
             self.get_logger().info(f"创建发布器: {topic_name}")
 
     def _load_rfid_tags(self):
         """加载RFID标签数据库"""
-        # 模拟标签数据 - 实际应该从数据库或配置文件加载
-        self.rfid_tags = [
-            {'id': 'book_001', 'position': (2.0, 1.5, 1.0), 'power': 1.0},
-            {'id': 'book_002', 'position': (2.5, 1.5, 1.0), 'power': 1.0},
-            {'id': 'book_003', 'position': (3.0, 1.5, 1.0), 'power': 1.0},
-            {'id': 'book_004', 'position': (-2.0, 1.5, 1.0), 'power': 1.0},
-            {'id': 'book_005', 'position': (-2.5, 1.5, 1.0), 'power': 1.0},
-            {'id': 'book_006', 'position': (1.5, -2.0, 1.0), 'power': 1.0},
-            {'id': 'book_007', 'position': (1.5, -2.5, 1.0), 'power': 1.0},
-            {'id': 'book_008', 'position': (-1.5, -2.0, 1.0), 'power': 1.0},
+        # 默认标签（用于测试）
+        default_tags = [
+            {'id': 'book_001', 'position': (2.0, 1.5, 0.3), 'power': 1.0},
+            {'id': 'book_002', 'position': (2.5, 1.5, 0.3), 'power': 1.0},
+            {'id': 'book_003', 'position': (3.0, 1.5, 0.3), 'power': 1.0},
+            {'id': 'book_004', 'position': (-2.0, 1.5, 0.3), 'power': 1.0},
+            {'id': 'book_005', 'position': (-2.5, 1.5, 0.3), 'power': 1.0},
+            {'id': 'book_006', 'position': (1.5, -2.0, 0.3), 'power': 1.0},
+            {'id': 'book_007', 'position': (1.5, -2.5, 0.3), 'power': 1.0},
+            {'id': 'book_008', 'position': (-1.5, -2.0, 0.3), 'power': 1.0},
         ]
 
-        self.get_logger().info(f"加载 {len(self.rfid_tags)} 个RFID标签")
+        # 尝试从配置文件中加载标签
+        config_tags = self.config.get('rfid_tags', {}).get('predefined_tags', [])
+        if config_tags:
+            loaded_tags = []
+            for tag in config_tags:
+                loaded_tags.append({
+                    'id': tag['id'],
+                    'position': tuple(tag['position']),
+                    'power': tag.get('power', 1.0)
+                })
+            self.rfid_tags = loaded_tags
+            self.get_logger().info(f"从配置文件加载 {len(self.rfid_tags)} 个RFID标签")
+        else:
+            self.rfid_tags = default_tags
+            self.get_logger().info(f"使用默认的 {len(self.rfid_tags)} 个RFID标签")
 
     def _pose_callback(self, msg: Pose):
-        """机器人位姿回调"""
+        """机器人位姿回调 - 来自Gazebo"""
         self.robot_pose = (
             msg.position.x,
             msg.position.y,
             self._quaternion_to_yaw(msg.orientation)
         )
+        self.pose_received = True
 
         # 简单判断是否在移动（实际应该使用速度信息）
         current_time = time.time()
@@ -157,8 +195,21 @@ class RFIDSensorNode(Node):
             self.robot_moving = True
         else:
             self.robot_moving = False
-
         self.last_update_time = current_time
+
+    def _amcl_pose_callback(self, msg: PoseWithCovarianceStamped):
+        """AMCL定位结果回调 - 用于导航系统集成"""
+        pose = msg.pose.pose
+        self.robot_pose = (
+            pose.position.x,
+            pose.position.y,
+            self._quaternion_to_yaw(pose.orientation)
+        )
+        self.pose_received = True
+
+        # AMCL定位通常认为是稳定的，不处于移动状态
+        self.robot_moving = False
+        self.last_update_time = time.time()
 
     def _quaternion_to_yaw(self, orientation) -> float:
         """四元数转偏航角"""
@@ -174,8 +225,16 @@ class RFIDSensorNode(Node):
         current_time = time.time()
         timestamp = self.get_clock().now().to_msg()
 
+        # 检查是否收到有效位姿
+        if not self.pose_received:
+            # 如果没有收到位姿，记录警告但继续运行
+            if int(current_time) % 5 == 0:  # 每5秒记录一次
+                self.get_logger().warn('等待机器人位姿数据...')
+            # 使用默认位姿继续扫描
+            self.robot_pose = (0.0, 0.0, 0.0)
+
         # 对每个方向进行扫描
-        for direction in self.publishers.keys():
+        for direction in self._rfid_publishers.keys():
             # 获取该方向范围内的标签
             tags_in_range = self._get_tags_in_range(direction)
 
@@ -195,7 +254,7 @@ class RFIDSensorNode(Node):
                 timestamp=timestamp
             )
 
-            self.publishers[direction].publish(scan_msg)
+            self._rfid_publishers[direction].publish(scan_msg)
 
     def _get_tags_in_range(self, direction: str) -> List[Dict]:
         """获取指定方向范围内的标签"""
@@ -266,7 +325,7 @@ class RFIDSensorNode(Node):
         return {
             'node_status': 'running',
             'scan_frequency': self.config.get('sensor', {}).get('scan_frequency', 10.0),
-            'active_directions': list(self.publishers.keys()),
+            'active_directions': list(self._rfid_publishers.keys()),
             'robot_moving': self.robot_moving,
             'robot_pose': {
                 'x': self.robot_pose[0],

@@ -42,22 +42,22 @@ rfid_sensor:
   # 天线参数
   antennas:
     front:
-      position: [0.15, 0.0, 0.1]        # 相对于机器人中心的位置(x,y,z)
+      position: [0.150, 0.000, 0.200]        # 相对于机器人中心的位置(x,y,z)
       orientation: 0.0                   # 朝向角度（弧度）
       gain: 1.0                          # 天线增益
 
     back:
-      position: [-0.15, 0.0, 0.1]
+      position: [-0.150, 0.000, 0.200]
       orientation: 3.14159               # π 弧度
       gain: 0.9                          # 后方增益略低
 
     left:
-      position: [0.0, 0.15, 0.1]
+      position: [0.000, 0.150, 0.200]
       orientation: 1.5708                # π/2 弧度
       gain: 0.95
 
     right:
-      position: [0.0, -0.15, 0.1]
+      position: [0.000, -0.150, 0.200]
       orientation: -1.5708               # -π/2 弧度
       gain: 0.95
 
@@ -79,43 +79,263 @@ rfid_tags:
 
   # 预定义标签位置（用于测试）
   predefined_tags:
+    - id: "world_tag_001"
+      position: [1.316, -1.595, 0.200]
+      power: 1.0
+      description: "书架RFID标签_001"
+
+    - id: "world_tag_002"
+      position: [1.436, -0.694, 0.743]
+      power: 1.0
+      description: "书架RFID标签_002"
+
+    - id: "world_tag_003"
+      position: [1.597, -0.725, 0.575]
+      power: 1.0
+      description: "书架RFID标签_003"
+
+    - id: "world_tag_004"
+      position: [1.579, -2.215, 0.694]
+      power: 1.0
+      description: "书架RFID标签_004"
+
+    - id: "world_tag_005"
+      position: [1.060, -4.096, 0.737]
+      power: 1.0
+      description: "书架RFID标签_005"
+
+    - id: "world_tag_006"
+      position: [1.618, -4.361, 0.572]
+      power: 1.0
+      description: "书架RFID标签_006"
+
+    - id: "world_tag_007"
+      position: [1.424, -4.764, 0.486]
+      power: 1.0
+      description: "书架RFID标签_007"
+
+    - id: "world_tag_008"
+      position: [1.209, -5.215, 0.666]
+      power: 1.0
+      description: "书架RFID标签_008"
+
+    - id: "world_tag_009"
+      position: [-2.290, -1.037, 0.450]
+      power: 1.0
+      description: "书架RFID标签_009"
+
+    - id: "world_tag_010"
+      position: [-2.596, -1.071, 0.660]
+      power: 1.0
+      description: "书架RFID标签_010"
+
+    - id: "world_tag_011"
+      position: [-2.807, -5.317, 0.517]
+      power: 1.0
+      description: "书架RFID标签_011"
+
+    - id: "world_tag_012"
+      position: [-2.813, -4.424, 0.640]
+      power: 1.0
+      description: "书架RFID标签_012"
+
+    - id: "world_tag_013"
+      position: [-2.677, -4.354, 0.547]
+      power: 1.0
+      description: "书架RFID标签_013"
+
+    - id: "world_tag_014"
+      position: [-2.524, -4.589, 0.584]
+      power: 1.0
+      description: "书架RFID标签_014"
+
+    - id: "world_tag_015"
+      position: [-5.970, -6.927, 0.633]
+      power: 1.0
+      description: "书架RFID标签_015"
+
+    - id: "world_tag_016"
+      position: [-6.247, -7.272, 0.502]
+      power: 1.0
+      description: "书架RFID标签_016"
+
+    - id: "world_tag_017"
+      position: [-2.302, -6.274, 0.549]
+      power: 1.0
+      description: "书架RFID标签_017"
+
+    - id: "world_tag_018"
+      position: [-2.556, -7.438, 0.740]
+      power: 1.0
+      description: "书架RFID标签_018"
+
+    - id: "world_tag_019"
+      position: [-2.460, -6.600, 0.700]
+      power: 1.0
+      description: "书架RFID标签_019"
+
+    - id: "world_tag_020"
+      position: [-2.141, -6.391, 0.451]
+      power: 1.0
+      description: "书架RFID标签_020"
+
+    - id: "world_tag_021"
+      position: [0.568, -6.743, 0.672]
+      power: 1.0
+      description: "书架RFID标签_021"
+
+    - id: "world_tag_022"
+      position: [0.774, -6.310, 0.506]
+      power: 1.0
+      description: "书架RFID标签_022"
+
+    - id: "world_tag_023"
+      position: [0.913, -7.243, 0.620]
+      power: 1.0
+      description: "书架RFID标签_023"
+
+    - id: "world_tag_024"
+      position: [0.886, -7.747, 0.504]
+      power: 1.0
+      description: "书架RFID标签_024"
+
+    - id: "world_tag_025"
+      position: [3.272, -7.203, 0.703]
+      power: 1.0
+      description: "书架RFID标签_025"
+
+    - id: "world_tag_026"
+      position: [3.252, -7.471, 0.708]
+      power: 1.0
+      description: "书架RFID标签_026"
+
+    - id: "world_tag_027"
+      position: [2.879, -7.733, 0.587]
+      power: 1.0
+      description: "书架RFID标签_027"
+
+    - id: "world_tag_028"
+      position: [6.362, -6.561, 0.650]
+      power: 1.0
+      description: "书架RFID标签_028"
+
+    - id: "world_tag_029"
+      position: [6.476, -6.253, 0.533]
+      power: 1.0
+      description: "书架RFID标签_029"
+
+    - id: "world_tag_030"
+      position: [6.275, -7.212, 0.557]
+      power: 1.0
+      description: "书架RFID标签_030"
+
+    - id: "world_tag_031"
+      position: [3.191, -0.513, 0.455]
+      power: 1.0
+      description: "书架RFID标签_031"
+
+    - id: "world_tag_032"
+      position: [2.750, -1.898, 0.613]
+      power: 1.0
+      description: "书架RFID标签_032"
+
+    - id: "world_tag_033"
+      position: [2.637, -1.381, 0.509]
+      power: 1.0
+      description: "书架RFID标签_033"
+
+    - id: "world_tag_034"
+      position: [3.346, -1.617, 0.537]
+      power: 1.0
+      description: "书架RFID标签_034"
+
+    - id: "world_tag_035"
+      position: [3.210, -5.176, 0.555]
+      power: 1.0
+      description: "书架RFID标签_035"
+
+    - id: "world_tag_036"
+      position: [3.136, -4.689, 0.450]
+      power: 1.0
+      description: "书架RFID标签_036"
+
+    - id: "world_tag_037"
+      position: [3.132, -5.330, 0.521]
+      power: 1.0
+      description: "书架RFID标签_037"
+
+    - id: "world_tag_038"
+      position: [-4.534, -0.549, 0.523]
+      power: 1.0
+      description: "书架RFID标签_038"
+
+    - id: "world_tag_039"
+      position: [-4.373, -1.603, 0.683]
+      power: 1.0
+      description: "书架RFID标签_039"
+
+    - id: "world_tag_040"
+      position: [-4.073, -1.184, 0.595]
+      power: 1.0
+      description: "书架RFID标签_040"
+
+    - id: "world_tag_041"
+      position: [-4.693, -1.545, 0.572]
+      power: 1.0
+      description: "书架RFID标签_041"
+
+    - id: "world_tag_042"
+      position: [-4.491, -4.784, 0.469]
+      power: 1.0
+      description: "书架RFID标签_042"
+
+    - id: "world_tag_043"
+      position: [-5.043, -4.654, 0.455]
+      power: 1.0
+      description: "书架RFID标签_043"
+
+    - id: "test_tag_origin"
+      position: [0.000, 0.000, 0.200]          # 世界坐标原点测试标签（降低高度）
+      power: 1.0
+      description: "原点测试标签"
+
     - id: "book_001"
-      position: [2.0, 1.5, 1.0]          # (x, y, z)
+      position: [2.000, 1.500, 0.300]          # (x, y, z)
       power: 1.0
       description: "科幻小说-三体"
 
     - id: "book_002"
-      position: [2.5, 1.5, 1.0]
+      position: [2.500, 1.500, 0.300]
       power: 1.0
       description: "技术书籍-Python编程"
 
     - id: "book_003"
-      position: [3.0, 1.5, 1.0]
+      position: [3.000, 1.500, 0.300]
       power: 1.0
       description: "历史书籍-明朝那些事"
 
     - id: "book_004"
-      position: [-2.0, 1.5, 1.0]
+      position: [-2.000, 1.500, 0.300]
       power: 1.0
       description: "文学作品-红楼梦"
 
     - id: "book_005"
-      position: [-2.5, 1.5, 1.0]
+      position: [-2.500, 1.500, 0.300]
       power: 1.0
       description: "技术书籍-ROS2实战"
 
     - id: "book_006"
-      position: [1.5, -2.0, 1.0]
+      position: [1.500, -2.000, 0.300]
       power: 1.0
       description: "数学书籍-线性代数"
 
     - id: "book_007"
-      position: [1.5, -2.5, 1.0]
+      position: [1.500, -2.500, 0.300]
       power: 1.0
       description: "物理书籍-量子力学"
 
     - id: "book_008"
-      position: [-1.5, -2.0, 1.0]
+      position: [-1.500, -2.000, 0.300]
       power: 1.0
       description: "哲学书籍-存在与时间"
 
@@ -130,11 +350,11 @@ rfid_tags:
       - type: "wifi"
         frequency: 2.4e9
         power: -30
-        position: [0.0, 0.0, 2.0]
+        position: [0.000, 0.000, 0.600]
       - type: "bluetooth"
         frequency: 2.4e9
         power: -40
-        position: [1.0, 1.0, 1.5]
+        position: [1.000, 1.000, 0.450]
 
   # 多路径效应
   multipath:
