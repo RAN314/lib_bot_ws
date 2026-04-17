@@ -1,0 +1,198 @@
+# RFID传感器配置文件
+# 图书馆机器人RFID仿真系统参数配置
+
+# =============================================
+# RFID噪声模型配置
+# =============================================
+rfid_noise_model:
+  # 基础检测参数
+  base_detection_range: 0.5              # 基础检测范围（米）
+  scan_frequency: 10.0                   # 扫描频率（Hz）
+  min_signal_strength: 0.1              # 最小可检测信号强度
+
+  # 噪声特性
+  false_negative_rate: 0.15             # 漏检率15%
+  false_positive_rate: 0.05             # 误检率5%
+  distance_decay_factor: 2.0            # 距离衰减因子
+  angle_sensitivity: 0.8                # 角度敏感度
+  environment_noise: 0.1                # 环境噪声水平
+
+  # 方向特性（相对于前方的性能差异）
+  direction_offsets:
+    front: 0.0                          # 前方基准
+    back: 0.1                           # 后方性能略差
+    left: 0.05                          # 左侧略差
+    right: 0.05                         # 右侧略差
+
+# =============================================
+# 传感器硬件配置
+# =============================================nrfid_sensor:
+  # 扫描参数
+  scan_frequency: 10.0                   # 实际扫描频率（Hz）
+  publish_frequency: 10.0                # 发布频率（Hz）
+
+  # 检测方向配置
+  directions:                           # 启用的检测方向
+    - front
+    - back
+    - left
+    - right
+
+  # 天线参数
+  antennas:
+    front:
+      position: [0.15, 0.0, 0.1]        # 相对于机器人中心的位置(x,y,z)
+      orientation: 0.0                   # 朝向角度（弧度）
+      gain: 1.0                          # 天线增益
+
+    back:
+      position: [-0.15, 0.0, 0.1]
+      orientation: 3.14159               # π 弧度
+      gain: 0.9                          # 后方增益略低
+
+    left:
+      position: [0.0, 0.15, 0.1]
+      orientation: 1.5708                # π/2 弧度
+      gain: 0.95
+
+    right:
+      position: [0.0, -0.15, 0.1]
+      orientation: -1.5708               # -π/2 弧度
+      gain: 0.95
+
+  # 发布配置
+  publish_frame_id: "rfid_sensor"        # TF坐标系
+  queue_size: 10                         # 发布队列大小
+
+# =============================================
+# RFID标签数据库配置
+# =============================================
+rfid_tags:
+  # 数据库设置
+  database_file: "library_tags.db"       # 标签数据库文件
+  default_power: 1.0                     # 默认标签功率
+
+  # 标签分布（用于自动生成）
+  auto_generate: false                   # 是否自动生成标签
+  shelf_tags_per_meter: 2.0              # 每米书架的标签数
+
+  # 预定义标签位置（用于测试）
+  predefined_tags:
+    - id: "book_001"
+      position: [2.0, 1.5, 1.0]          # (x, y, z)
+      power: 1.0
+      description: "科幻小说-三体"
+
+    - id: "book_002"
+      position: [2.5, 1.5, 1.0]
+      power: 1.0
+      description: "技术书籍-Python编程"
+
+    - id: "book_003"
+      position: [3.0, 1.5, 1.0]
+      power: 1.0
+      description: "历史书籍-明朝那些事"
+
+    - id: "book_004"
+      position: [-2.0, 1.5, 1.0]
+      power: 1.0
+      description: "文学作品-红楼梦"
+
+    - id: "book_005"
+      position: [-2.5, 1.5, 1.0]
+      power: 1.0
+      description: "技术书籍-ROS2实战"
+
+    - id: "book_006"
+      position: [1.5, -2.0, 1.0]
+      power: 1.0
+      description: "数学书籍-线性代数"
+
+    - id: "book_007"
+      position: [1.5, -2.5, 1.0]
+      power: 1.0
+      description: "物理书籍-量子力学"
+
+    - id: "book_008"
+      position: [-1.5, -2.0, 1.0]
+      power: 1.0
+      description: "哲学书籍-存在与时间"
+
+# =============================================
+# 仿真环境配置
+# =============================================nrfid_simulation:
+  # 环境因素
+  environment_factors:
+    temperature_effect: 0.01              # 温度影响系数
+    humidity_effect: 0.005               # 湿度影响系数
+    interference_sources:                 # 干扰源配置
+      - type: "wifi"
+        frequency: 2.4e9
+        power: -30
+        position: [0.0, 0.0, 2.0]
+      - type: "bluetooth"
+        frequency: 2.4e9
+        power: -40
+        position: [1.0, 1.0, 1.5]
+
+  # 多路径效应
+  multipath:
+    enabled: true
+    reflection_coefficient: 0.3          # 反射系数
+    max_reflections: 3                   # 最大反射次数
+
+# =============================================
+# ROS2参数声明
+# =============================================n/**:
+  ros__parameters:
+    # 噪声模型参数
+    rfid_noise_model.base_detection_range: 0.5
+    rfid_noise_model.false_negative_rate: 0.15
+    rfid_noise_model.false_positive_rate: 0.05
+    rfid_noise_model.scan_frequency: 10.0
+
+    # 传感器参数
+    rfid_sensor.scan_frequency: 10.0
+    rfid_sensor.publish_frequency: 10.0
+    rfid_sensor.publish_frame_id: "rfid_sensor"
+
+    # 方向配置
+    rfid_sensor.directions: ["front", "back", "left", "right"]
+
+# =============================================
+# 调试和监控配置
+# =============================================ndebug:
+  # 日志级别
+  log_level: "INFO"                      # DEBUG, INFO, WARN, ERROR
+
+  # 性能监控
+  performance_monitoring:
+    enabled: true
+    report_interval: 10.0                # 报告间隔（秒）
+
+  # 详细统计
+  detailed_statistics:
+    enabled: true
+    include_timing: true
+    include_signal_analysis: true
+
+# =============================================
+# 测试配置
+# =============================================ntest_scenarios:
+  # 理想条件测试
+  ideal_conditions:
+    false_negative_rate: 0.0
+    false_positive_rate: 0.0
+    environment_noise: 0.0
+
+  # 恶劣条件测试
+  harsh_conditions:
+    false_negative_rate: 0.3
+    false_positive_rate: 0.15
+    environment_noise: 0.3
+
+  # 性能测试
+  performance_test:
+    scan_frequency: 20.0
+    num_tags: 100
+    test_duration: 60.0

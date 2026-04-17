@@ -1,0 +1,120 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+  - Class: rviz_common/Time
+    Name: Time
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Alpha: 0.5
+      Color: 160; 160; 164
+      Line Style: Lines
+      Offset: 1
+      Plane: XY
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Update Interval: 0.1
+
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Robot Description: robot_description
+      TF Prefix: ""
+
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Enabled: true
+      Topic:
+        Value: /scan
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+      Color: 255; 255; 255
+      Alpha: 1
+      Size (m): 0.05
+
+    - Class: rviz_default_plugins/MarkerArray
+      Name: RFID Detection Zones
+      Enabled: true
+      Topic:
+        Value: /rfid/detection_zones
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+
+    - Class: rviz_default_plugins/Marker
+      Name: RFID Tags
+      Enabled: true
+      Topic:
+        Value: /rfid/tag_positions
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+
+    - Class: rviz_default_plugins/Image
+      Name: Camera
+      Enabled: false
+      Topic:
+        Value: /camera/image
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+
+  Global Options:
+    Fixed Frame: map
+    Frame Rate: 30
+
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Name: Interact
+    - Class: rviz_default_plugins/MoveCamera
+      Name: MoveCamera
+    - Class: rviz_default_plugins/FocusCamera
+      Name: FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Name: Measure
+
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Orbit
+      Distance: 10
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Pitch: 0.7
+      Yaw: 0
+
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 1080
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000400000000000001c400000396fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000028000000f20000005c00fffffffb000000120056006900650077007300200054006f006f006c00000001e1000001b5000000a900fffffffb000000200054006f006f006c002000500072006f00700065007200740069006500730000000028000000f20000005c00fffffffb000000200054006f006f006c002000500072006f007000650072007400690065007300320000000028000000f20000005c00fffffffb000000100044006900730070006c0061007900730000000028000000f20000005c00fffffffb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00ffffff
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: true
+  Width: 1920
+  X: 0
+  Y: 0
