@@ -66,10 +66,17 @@ gazebo:
         gyro_noise: 0.005         # 陀螺仪噪声
         accel_noise: 0.05         # 加速度计噪声
 
-# RFID传感器配置 (待实现)
+# RFID传感器配置
 rfid_sensor:
   ros__parameters:
-    enabled: false  # 暂时禁用，等待RFID插件实现
+    enabled: true   # 启用RFID传感器
     update_rate: 10.0
     detection_range: 0.5
     directions: ['front', 'back', 'left', 'right']
+
+    # RFID天线位置（相对于机器人中心）
+    antenna_positions:
+      front: [0.15, 0.0, 0.1]     # 前方天线
+      back: [-0.15, 0.0, 0.1]     # 后方天线
+      left: [0.0, 0.15, 0.1]      # 左方天线
+      right: [0.0, -0.15, 0.1]    # 右方天线
