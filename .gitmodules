@@ -11,3 +11,9 @@
 [submodule "src/turtlebot3"]
 	path = src/turtlebot3
 	url = https://github.com/ROBOTIS-GIT/turtlebot3.git
+[submodule "src/--force"]
+	path = src/--force
+	url = https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git
+[submodule "src/turtlebot3_manipulation_simulations"]
+	path = src/turtlebot3_manipulation_simulations
+	url = https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git
