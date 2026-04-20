@@ -16,6 +16,7 @@
   <exec_depend>gazebo_plugins</exec_depend>
   <exec_depend>turtlebot3_gazebo</exec_depend>
   <exec_depend>turtlebot3_description</exec_depend>
+  <exec_depend>turtlebot3_manipulation_gazebo</exec_depend>
   <exec_depend>aws_robomaker_bookstore_world</exec_depend>
   <exec_depend>nav2_bringup</exec_depend>
   <exec_depend>launch_ros</exec_depend>

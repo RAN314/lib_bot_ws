@@ -10,7 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/library_simulation.launch.py', 'launch/library_with_turtlebot3.launch.py', 'launch/library_headless.launch.py', 'launch/library_navigation.launch.py', 'launch/library_navigation_complete.launch.py', 'launch/library_tb3_simulation.launch.py', 'launch/library_nav2_simulation.launch.py', 'launch/library_nav2_simple.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/library_simulation.launch.py', 'launch/library_with_turtlebot3.launch.py', 'launch/library_headless.launch.py', 'launch/library_navigation.launch.py', 'launch/library_navigation_complete.launch.py', 'launch/library_tb3_simulation.launch.py', 'launch/library_nav2_simulation.launch.py', 'launch/library_nav2_simple.launch.py', 'launch/library_manipulation_bookstore.launch.py', 'launch/library_manipulation_base.launch.py']),
         ('share/' + package_name + '/config', ['config/turtlebot3_config.yaml', 'config/library_nav2_params.yaml']),
         ('share/' + package_name + '/worlds', ['worlds/bookstore.world']),
     ],
