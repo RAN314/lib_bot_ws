@@ -44,7 +44,8 @@ class MainWindow(QMainWindow):
         self.ros2_manager = Ros2Manager()
 
         # 对话框
-        self.find_book_dialog = FindBookDialog(self, self.ros2_manager)
+        book_database_file = "/home/lhl/lib_bot_ws/src/libbot_ui/config/book_database.yaml"
+        self.find_book_dialog = FindBookDialog(self, self.ros2_manager, book_database_file)
         self.settings_dialog = None
 
         # 调试模式状态
@@ -195,36 +196,73 @@ class MainWindow(QMainWindow):
 
     def on_find_book_confirmed(self, book_id, guide_patron):
         """找书确认处理"""
-        # 发送找书任务
-        success = self.ros2_manager.send_find_book_goal(
-            book_id,
-            guide_patron
-        )
+        # 首先查找书籍位置信息
+        book_database_file = "/home/lhl/lib_bot_ws/src/libbot_ui/config/book_database.yaml"
+        book_info = self.ros2_manager.find_book_by_id(book_id, book_database_file)
 
-        if success:
-            # 在日志面板显示任务已发送
-            if hasattr(self.right_panel, 'add_timestamped_log'):
-                self.right_panel.add_timestamped_log(
-                    f"🎯 找书任务已发送: {book_id} (引导读者: {'是' if guide_patron else '否'})",
-                    "INFO"
-                )
-            elif hasattr(self.right_panel, 'add_log_entry'):
-                self.right_panel.add_log_entry(
-                    f"🎯 找书任务已发送: {book_id} (引导读者: {'是' if guide_patron else '否'})",
-                    "INFO"
-                )
+        if book_info and 'position' in book_info:
+            # 使用位置信息进行导航
+            position = book_info['position']
+            success = self.ros2_manager.send_find_book_goal_with_position(
+                book_id, position, guide_patron
+            )
+
+            if success:
+                # 在日志面板显示任务已发送
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"🎯 找书任务已发送: {book_id} 位置({position['x']:.1f}, {position['y']:.1f}) (引导读者: {'是' if guide_patron else '否'})",
+                        "INFO"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"🎯 找书任务已发送: {book_id} 位置({position['x']:.1f}, {position['y']:.1f}) (引导读者: {'是' if guide_patron else '否'})",
+                        "INFO"
+                    )
+            else:
+                # 显示错误
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"❌ 找书任务发送失败: {book_id}",
+                        "ERROR"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"❌ 找书任务发送失败: {book_id}",
+                        "ERROR"
+                    )
         else:
-            # 显示错误
+            # 书籍信息未找到，使用传统方式
             if hasattr(self.right_panel, 'add_timestamped_log'):
                 self.right_panel.add_timestamped_log(
-                    f"❌ 找书任务发送失败: {book_id}",
-                    "ERROR"
+                    f"⚠️ 书籍 {book_id} 位置信息未找到，使用传统找书模式",
+                    "WARN"
                 )
-            elif hasattr(self.right_panel, 'add_log_entry'):
-                self.right_panel.add_log_entry(
-                    f"❌ 找书任务发送失败: {book_id}",
-                    "ERROR"
-                )
+
+            success = self.ros2_manager.send_find_book_goal(book_id, guide_patron)
+
+            if success:
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"🎯 找书任务已发送: {book_id} (引导读者: {'是' if guide_patron else '否'})",
+                        "INFO"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"🎯 找书任务已发送: {book_id} (引导读者: {'是' if guide_patron else '否'})",
+                        "INFO"
+                    )
+            else:
+                if hasattr(self.right_panel, 'add_timestamped_log'):
+                    self.right_panel.add_timestamped_log(
+                        f"❌ 找书任务发送失败: {book_id}",
+                        "ERROR"
+                    )
+                elif hasattr(self.right_panel, 'add_log_entry'):
+                    self.right_panel.add_log_entry(
+                        f"❌ 找书任务发送失败: {book_id}",
+                        "ERROR"
+                    )
 
     def on_cancel_clicked(self):
         """取消按钮点击处理"""

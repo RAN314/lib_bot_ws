@@ -9,6 +9,12 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 import threading
 import weakref
 
+# 添加ROS2消息类型导入
+from geometry_msgs.msg import PoseStamped, Twist
+from std_msgs.msg import Bool
+from nav_msgs.msg import Odometry
+import yaml
+
 # 导入L1和L2恢复集成
 from .l1_recovery_integration import L1RecoveryIntegration
 from .l2_recovery_integration import L2RecoveryIntegration
@@ -64,6 +70,13 @@ class Ros2Manager(QObject):
 
         # Service客户端
         self.get_book_info_client = None
+
+        # 仿真环境发布者和订阅者
+        self.goal_publisher = None
+        self.cmd_vel_publisher = None
+        self.emergency_stop_publisher = None
+        self.robot_pose_subscriber = None
+        self.odom_subscriber = None
 
         # L1恢复集成
         self.l1_recovery_integration = None
@@ -140,6 +153,9 @@ class Ros2Manager(QObject):
             self.ros2_timer.timeout.connect(self._process_ros2_events)
             self.ros2_timer.start(10)  # 每10ms处理一次ROS2事件
 
+            # 初始化仿真环境接口
+            self._init_simulation_interface()
+
             # 启动健康检查定时器
             self._start_health_check()
 
@@ -163,6 +179,282 @@ class Ros2Manager(QObject):
         """在后台线程中运行ROS2执行器"""
         while rclpy.ok() and self.node is not None:
             self.executor.spin_once(timeout_sec=0.1)
+
+    def _init_simulation_interface(self):
+        """初始化仿真环境接口"""
+        try:
+            # 创建目标位置发布者
+            self.goal_publisher = self.node.create_publisher(
+                PoseStamped, '/goal_pose', 10
+            )
+
+            # 创建速度命令发布者
+            self.cmd_vel_publisher = self.node.create_publisher(
+                Twist, '/cmd_vel', 10
+            )
+
+            # 创建紧急停止发布者
+            self.emergency_stop_publisher = self.node.create_publisher(
+                Bool, '/emergency_stop', 10
+            )
+
+            # 订阅机器人位置
+            self.robot_pose_subscriber = self.node.create_subscription(
+                PoseStamped, '/robot_pose', self._robot_pose_callback, 10
+            )
+
+            # 订阅里程计
+            self.odom_subscriber = self.node.create_subscription(
+                Odometry, '/odom', self._odom_callback, 10
+            )
+
+            self.node.get_logger().info("仿真环境接口初始化成功")
+
+        except Exception as e:
+            self.node.get_logger().error(f"仿真环境接口初始化失败: {e}")
+
+    def _robot_pose_callback(self, msg):
+        """机器人位置回调"""
+        pose_dict = {
+            'x': msg.pose.position.x,
+            'y': msg.pose.position.y,
+            'z': msg.pose.position.z,
+            'yaw': 0.0  # 可以从四元数计算
+        }
+        self.robot_pose_updated.emit(pose_dict)
+
+    def _odom_callback(self, msg):
+        """里程计回调"""
+        pose_dict = {
+            'x': msg.pose.pose.position.x,
+            'y': msg.pose.pose.position.y,
+            'z': msg.pose.pose.position.z,
+            'yaw': 0.0  # 可以从四元数计算
+        }
+        self.robot_pose_updated.emit(pose_dict)
+
+    def navigate_to_position(self, x, y, z=0.0, frame_id='map'):
+        """导航到指定位置
+
+        Args:
+            x, y, z: 目标位置坐标
+            frame_id: 坐标系ID
+
+        Returns:
+            bool: 是否成功发送导航目标
+        """
+        try:
+            if self.goal_publisher is None:
+                self.node.get_logger().warn("目标位置发布器未初始化")
+                return False
+
+            # 创建目标位置消息
+            goal_msg = PoseStamped()
+            goal_msg.header.frame_id = frame_id
+            goal_msg.header.stamp = self.node.get_clock().now().to_msg()
+            goal_msg.pose.position.x = float(x)
+            goal_msg.pose.position.y = float(y)
+            goal_msg.pose.position.z = float(z)
+            goal_msg.pose.orientation.w = 1.0  # 无旋转
+
+            # 发布目标位置
+            self.goal_publisher.publish(goal_msg)
+            self.node.get_logger().info(f"导航目标已发送: ({x}, {y}, {z})")
+
+            return True
+
+        except Exception as e:
+            self.node.get_logger().error(f"发送导航目标失败: {e}")
+            return False
+
+    def emergency_stop_robot(self):
+        """紧急停止机器人"""
+        try:
+            if self.emergency_stop_publisher is None:
+                self.node.get_logger().warn("紧急停止发布器未初始化")
+                return False
+
+            # 发送紧急停止消息
+            stop_msg = Bool()
+            stop_msg.data = True
+            self.emergency_stop_publisher.publish(stop_msg)
+
+            # 同时发送零速度命令
+            if self.cmd_vel_publisher:
+                twist_msg = Twist()
+                self.cmd_vel_publisher.publish(twist_msg)
+
+            self.node.get_logger().info("紧急停止命令已发送")
+            return True
+
+        except Exception as e:
+            self.node.get_logger().error(f"发送紧急停止命令失败: {e}")
+            return False
+
+    def load_book_database(self, database_file):
+        """加载书籍数据库"""
+        try:
+            with open(database_file, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+                return data.get('books', {})
+        except Exception as e:
+            self.node.get_logger().error(f"加载书籍数据库失败: {e}")
+            return {}
+
+    def find_book_by_id(self, book_id, database_file=None):
+        """根据ID查找书籍信息
+
+        Args:
+            book_id: 书籍ID
+            database_file: 数据库文件路径（可选）
+
+        Returns:
+            dict: 书籍信息，包含位置等数据
+        """
+        try:
+            # 如果提供了数据库文件，从文件加载
+            if database_file:
+                books = self.load_book_database(database_file)
+            else:
+                # 使用默认示例数据
+                books = {
+                    "BK001": {
+                        "title": "人工智能导论",
+                        "author": "张三",
+                        "position": {"x": 2.5, "y": 1.8, "z": 0.0}
+                    },
+                    "BK002": {
+                        "title": "机器学习实战",
+                        "author": "李四",
+                        "position": {"x": 4.2, "y": 3.1, "z": 0.0}
+                    }
+                }
+
+            return books.get(book_id)
+
+        except Exception as e:
+            self.node.get_logger().error(f"查找书籍失败: {e}")
+            return None
+
+    def send_find_book_goal_with_position(self, book_id, position, guide_patron=False):
+        """发送找书任务（使用指定位置）
+
+        Args:
+            book_id: 书籍ID
+            position: 位置字典 {x, y, z}
+            guide_patron: 是否引导读者
+
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            # 首先尝试使用Action接口
+            if self.find_book_action_client is not None:
+                return self.send_find_book_goal(book_id, guide_patron)
+
+            # 如果Action不可用，直接使用导航接口
+            if position and 'x' in position and 'y' in position:
+                success = self.navigate_to_position(
+                    position['x'], position['y'], position.get('z', 0.0)
+                )
+
+                if success:
+                    # 启动模拟任务状态更新
+                    self._start_book_search_simulation(book_id, position)
+
+                return success
+
+            return False
+
+        except Exception as e:
+            self.error_occurred.emit({
+                "error_code": "FIND_BOOK_POSITION_ERROR",
+                "message": f"使用位置找书失败: {str(e)}"
+            })
+            return False
+
+    def _start_book_search_simulation(self, book_id, position):
+        """启动找书任务模拟"""
+        # 创建模拟任务定时器
+        self.simulation_timer = QTimer()
+        self.simulation_progress = 0
+        self.simulation_book_id = book_id
+        self.simulation_position = position
+
+        # 立即发送初始状态
+        self._send_book_search_update()
+
+        # 设置定时器，每200ms更新一次状态（5Hz）
+        self.simulation_timer.timeout.connect(self._send_book_search_update)
+        self.simulation_timer.start(200)
+
+    def _send_book_search_update(self):
+        """发送找书任务状态更新"""
+        import time
+
+        # 模拟进度增长
+        self.simulation_progress += 1  # 每次增加1%
+
+        if self.simulation_progress <= 100:
+            # 根据进度确定状态
+            if self.simulation_progress < 40:
+                status = "navigating"
+            elif self.simulation_progress < 80:
+                status = "scanning"
+            elif self.simulation_progress < 95:
+                status = "approaching"
+            else:
+                status = "completed"
+
+            # 计算当前位置（从起点到目标点的线性插值）
+            progress_ratio = self.simulation_progress / 100.0
+            current_x = 0.0 + (self.simulation_position['x'] * progress_ratio)
+            current_y = 0.0 + (self.simulation_position['y'] * progress_ratio)
+
+            # 模拟RFID检测
+            books_detected = []
+            signal_strength = 0.0
+            if self.simulation_progress > 60:
+                books_detected = [self.simulation_book_id]
+                signal_strength = 0.6 + (0.3 * (self.simulation_progress - 60) / 40)
+
+            # 发送状态更新
+            status_data = {
+                "status": status,
+                "progress": float(self.simulation_progress),
+                "distance_to_goal": self.simulation_position['x'] * (1.0 - progress_ratio),
+                "current_pose": {"x": current_x, "y": current_y},
+                "books_detected": books_detected,
+                "signal_strength": signal_strength,
+                "detection_direction": "front" if signal_strength > 0.7 else "",
+                "estimated_remaining": max(0, 20.0 - (20.0 * progress_ratio)),
+            }
+
+            self.task_status_updated.emit(status_data)
+
+        else:
+            # 任务完成
+            self.simulation_timer.stop()
+            self.simulation_timer = None
+
+            # 发送完成状态
+            self.task_status_updated.emit({
+                "status": "completed",
+                "progress": 100.0,
+                "distance_to_goal": 0.0,
+                "current_pose": self.simulation_position,
+                "books_detected": [self.simulation_book_id],
+                "signal_strength": 0.95,
+                "detection_direction": "front",
+                "estimated_remaining": 0.0,
+                "result": {
+                    "success": True,
+                    "message": f"图书 {self.simulation_book_id} 已找到",
+                    "search_time": 20.0,
+                    "navigation_attempts": 1,
+                    "scan_attempts": 2,
+                }
+            })
 
     def _start_health_check(self):
         """启动系统健康检查"""
