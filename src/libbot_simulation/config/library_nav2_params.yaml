@@ -12,8 +12,8 @@ amcl:
     beam_skip_threshold: 0.3
     do_beamskip: false
     global_frame_id: "map"
-    initial_pose.x: 0.0
-    initial_pose.y: 0.0
+    initial_pose.x: 5.0
+    initial_pose.y: 5.0
     initial_pose.z: 0.3
     initial_pose.yaw: 0.0
     lambda_short: 0.1

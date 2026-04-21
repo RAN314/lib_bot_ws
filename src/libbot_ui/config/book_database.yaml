@@ -2,6 +2,16 @@
 # UID -> 坐标映射
 
 books:
+  # 原点RFID标签对应的书籍
+  "ORIGIN_BOOK_001":
+    title: "图书馆指南"
+    author: "图书馆管理员"
+    isbn: "978-7-000-00001-1"
+    position: {x: 0.0, y: 0.0, z: 0.0}
+    shelf_zone: "O"
+    shelf_level: 1
+    description: "原点测试书籍，用于RFID功能验证"
+
   # 示例书籍数据
   "BK001":
     title: "人工智能导论"

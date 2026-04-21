@@ -13,6 +13,7 @@ import weakref
 from geometry_msgs.msg import PoseStamped, Twist
 from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
+from nav2_msgs.action import NavigateToPose
 import yaml
 
 # 导入L1和L2恢复集成
@@ -66,6 +67,7 @@ class Ros2Manager(QObject):
 
         # Action客户端
         self.find_book_action_client = None
+        self.navigate_to_pose_client = None
         self.current_goal_handle = None
 
         # Service客户端
@@ -127,6 +129,27 @@ class Ros2Manager(QObject):
                     f"libbot_msgs not found or import error: {e}, running in simulation mode"
                 )
                 self.find_book_action_client = None
+
+            # 创建NavigateToPose Action客户端
+            try:
+                self.navigate_to_pose_client = ActionClient(
+                    self.node, NavigateToPose, "/navigate_to_pose",
+                    callback_group=ReentrantCallbackGroup()
+                )
+
+                # 检查NavigateToPose Action服务器是否可用
+                if not self.navigate_to_pose_client.wait_for_server(timeout_sec=1.0):
+                    self.node.get_logger().warn(
+                        "/navigate_to_pose Action server not available, will use topic fallback"
+                    )
+                else:
+                    self.node.get_logger().info("/navigate_to_pose Action server connected")
+
+            except Exception as e:
+                self.node.get_logger().warn(
+                    f"Failed to create NavigateToPose client: {e}, using topic fallback"
+                )
+                self.navigate_to_pose_client = None
 
             # 创建Service客户端
             try:
@@ -234,7 +257,7 @@ class Ros2Manager(QObject):
         self.robot_pose_updated.emit(pose_dict)
 
     def navigate_to_position(self, x, y, z=0.0, frame_id='map'):
-        """导航到指定位置
+        """导航到指定位置（使用NavigateToPose Action）
 
         Args:
             x, y, z: 目标位置坐标
@@ -244,27 +267,38 @@ class Ros2Manager(QObject):
             bool: 是否成功发送导航目标
         """
         try:
-            if self.goal_publisher is None:
-                self.node.get_logger().warn("目标位置发布器未初始化")
+            if self.navigate_to_pose_client is None:
+                self.node.get_logger().error("NavigateToPose Action客户端未初始化")
                 return False
 
-            # 创建目标位置消息
-            goal_msg = PoseStamped()
-            goal_msg.header.frame_id = frame_id
-            goal_msg.header.stamp = self.node.get_clock().now().to_msg()
-            goal_msg.pose.position.x = float(x)
-            goal_msg.pose.position.y = float(y)
-            goal_msg.pose.position.z = float(z)
-            goal_msg.pose.orientation.w = 1.0  # 无旋转
+            # 等待Action服务器可用
+            if not self.navigate_to_pose_client.wait_for_server(timeout_sec=5.0):
+                self.node.get_logger().error("NavigateToPose Action服务器不可用")
+                return False
 
-            # 发布目标位置
-            self.goal_publisher.publish(goal_msg)
-            self.node.get_logger().info(f"导航目标已发送: ({x}, {y}, {z})")
+            # 创建NavigateToPose目标
+            goal_msg = NavigateToPose.Goal()
+            goal_msg.pose.header.frame_id = frame_id
+            goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
+            goal_msg.pose.pose.position.x = float(x)
+            goal_msg.pose.pose.position.y = float(y)
+            goal_msg.pose.pose.position.z = float(z)
+            goal_msg.pose.pose.orientation.w = 1.0  # 无旋转
 
+            # 发送目标（异步）
+            future = self.navigate_to_pose_client.send_goal_async(
+                goal_msg,
+                feedback_callback=self._navigate_to_pose_feedback_callback
+            )
+
+            # 添加完成回调
+            future.add_done_callback(self._navigate_to_pose_goal_response_callback)
+
+            self.node.get_logger().info(f"NavigateToPose目标已发送: ({x}, {y}, {z})")
             return True
 
         except Exception as e:
-            self.node.get_logger().error(f"发送导航目标失败: {e}")
+            self.node.get_logger().error(f"发送NavigateToPose目标失败: {e}")
             return False
 
     def emergency_stop_robot(self):
@@ -348,23 +382,35 @@ class Ros2Manager(QObject):
             bool: 是否成功
         """
         try:
-            # 首先尝试使用Action接口
-            if self.find_book_action_client is not None:
-                return self.send_find_book_goal(book_id, guide_patron)
-
-            # 如果Action不可用，直接使用导航接口
+            # 直接使用导航接口（NavigateToPose Action）
             if position and 'x' in position and 'y' in position:
                 success = self.navigate_to_position(
                     position['x'], position['y'], position.get('z', 0.0)
                 )
 
                 if success:
-                    # 启动模拟任务状态更新
-                    self._start_book_search_simulation(book_id, position)
+                    # NavigateToPose Action会提供真实的反馈，不需要模拟任务
+                    # 但如果没有Action服务器，我们需要启动模拟
+                    if (self.navigate_to_pose_client is not None and
+                        self.navigate_to_pose_client.wait_for_server(timeout_sec=0.1)):
+                        # Action服务器可用，使用真实反馈
+                        self.node.get_logger().info(f"使用NavigateToPose Action进行导航，book_id: {book_id}")
+                    else:
+                        # Action服务器不可用，启动模拟任务
+                        self._start_book_search_simulation(book_id, position)
 
                 return success
 
-            return False
+            # 如果没有提供有效位置，尝试使用find_book action作为备选
+            elif self.find_book_action_client is not None:
+                return self.send_find_book_goal(book_id, guide_patron)
+
+            else:
+                self.error_occurred.emit({
+                    "error_code": "NO_POSITION_OR_ACTION_AVAILABLE",
+                    "message": "未提供有效位置且find_book action不可用"
+                })
+                return False
 
         except Exception as e:
             self.error_occurred.emit({
@@ -797,6 +843,103 @@ class Ros2Manager(QObject):
             )
             # 确保重置goal handle
             self.current_goal_handle = None
+
+    def _navigate_to_pose_goal_response_callback(self, future):
+        """NavigateToPose目标响应回调"""
+        try:
+            goal_handle = future.result()
+
+            if not goal_handle.accepted:
+                self.error_occurred.emit(
+                    {
+                        "error_code": "NAVIGATE_TO_POSE_REJECTED",
+                        "message": "NavigateToPose goal was rejected by the action server",
+                    }
+                )
+                return
+
+            self.current_goal_handle = goal_handle
+            self.node.get_logger().info("NavigateToPose goal accepted")
+
+            # 获取结果
+            result_future = goal_handle.get_result_async()
+            result_future.add_done_callback(self._navigate_to_pose_result_callback)
+
+        except Exception as e:
+            self.error_occurred.emit(
+                {
+                    "error_code": "NAVIGATE_TO_POSE_RESPONSE_ERROR",
+                    "message": f"Error in NavigateToPose goal response: {str(e)}",
+                }
+            )
+
+    def _navigate_to_pose_feedback_callback(self, feedback):
+        """NavigateToPose反馈回调"""
+        try:
+            fb = feedback.feedback
+            self.node.get_logger().info(f"导航反馈: 剩余距离={fb.distance_remaining:.2f}米")
+
+            # 根据剩余距离确定状态
+            if fb.distance_remaining <= 0.1:  # 接近目标
+                status = "approaching"
+            elif fb.distance_remaining <= 0.5:  # 很接近目标
+                status = "scanning"
+            else:  # 正在导航
+                status = "navigating"
+
+            # 将NavigateToPose反馈转换为任务状态更新
+            feedback_dict = {
+                "status": status,
+                "progress": max(0, min(100, 100 - int(fb.distance_remaining * 10))),  # 限制在0-100范围内
+                "distance_to_goal": fb.distance_remaining,
+                "current_pose": {"x": 0.0, "y": 0.0},  # 可以从其他话题获取实际位置
+                "books_detected": [],
+                "signal_strength": 0.0,
+                "detection_direction": "",
+                "estimated_remaining": fb.distance_remaining * 2.0,  # 估计剩余时间
+            }
+
+            self.task_status_updated.emit(feedback_dict)
+
+        except Exception as e:
+            self.node.get_logger().error(f"Error in NavigateToPose feedback callback: {str(e)}")
+
+    def _navigate_to_pose_result_callback(self, future):
+        """NavigateToPose结果回调"""
+        try:
+            result = future.result().result
+            status = future.result().status
+
+            if status == 0:  # 成功
+                self.node.get_logger().info('NavigateToPose导航成功完成!')
+                self.task_status_updated.emit(
+                    {"status": "completed", "result": {"success": True, "message": "Navigation completed"}}
+                )
+            elif status == 1:  # 取消
+                self.node.get_logger().warn('NavigateToPose导航被取消')
+                self.task_status_updated.emit(
+                    {"status": "cancelled", "message": "Navigation cancelled"}
+                )
+            elif status == 2:  # 被抢占
+                self.node.get_logger().warn('NavigateToPose导航被抢占')
+                self.task_status_updated.emit(
+                    {"status": "cancelled", "message": "Navigation preempted"}
+                )
+            else:  # 失败
+                self.node.get_logger().error(f'NavigateToPose导航失败，状态码: {status}')
+                self.task_status_updated.emit(
+                    {"status": "failed", "message": f"Navigation failed with status {status}"}
+                )
+
+            self.current_goal_handle = None
+
+        except Exception as e:
+            self.error_occurred.emit(
+                {
+                    "error_code": "NAVIGATE_TO_POSE_RESULT_ERROR",
+                    "message": f"Error getting NavigateToPose result: {str(e)}",
+                }
+            )
 
     # ========== Service通信 ==========
 

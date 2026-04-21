@@ -294,10 +294,10 @@ rfid_tags:
       power: 1.0
       description: "书架RFID标签_043"
 
-    - id: "test_tag_origin"
-      position: [0.000, 0.000, 0.200]          # 世界坐标原点测试标签（降低高度）
+    - id: "ORIGIN_BOOK_001"
+      position: [0.000, 0.000, 0.100]          # 世界坐标原点书籍标签
       power: 1.0
-      description: "原点测试标签"
+      description: "图书馆指南 - 原点测试书籍"
 
     - id: "book_001"
       position: [2.000, 1.500, 0.300]          # (x, y, z)
