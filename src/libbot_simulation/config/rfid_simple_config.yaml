@@ -1,0 +1,85 @@
+# RFID传感器配置文件
+# 图书馆机器人RFID仿真系统参数配置
+
+# =============================================
+# RFID噪声模型配置
+# =============================================
+rfid_noise_model:
+  # 基础检测参数
+  base_detection_range: 0.5              # 基础检测范围（米）
+  scan_frequency: 10.0                   # 扫描频率（Hz）
+  min_signal_strength: 0.1              # 最小可检测信号强度
+
+  # 噪声特性
+  false_negative_rate: 0.05             # 漏检率5%
+  false_positive_rate: 0.00             # 误检率0% (关闭虚假标签)
+  distance_decay_factor: 2.0            # 距离衰减因子
+  angle_sensitivity: 0.8                # 角度敏感度
+  environment_noise: 0.1                # 环境噪声水平
+
+  # 方向特性（相对于前方的性能差异）
+  direction_offsets:
+    front: 0.0                          # 前方基准
+    back: 0.1                           # 后方性能略差
+    left: 0.05                          # 左侧略差
+    right: 0.05                         # 右侧略差
+
+# =============================================
+# 传感器硬件配置
+# =============================================
+rfid_sensor:
+  # 扫描参数
+  scan_frequency: 10.0                   # 实际扫描频率（Hz）
+  publish_frequency: 10.0                # 发布频率（Hz）
+
+  # 检测方向配置
+  directions:                           # 启用的检测方向
+    - front
+    - back
+    - left
+    - right
+
+  # 天线参数
+  antennas:
+    front:
+      position: [0.150, 0.000, 0.200]        # 相对于机器人中心的位置(x,y,z)
+      orientation: 0.0                   # 朝向角度（弧度）
+      gain: 1.0                          # 天线增益
+
+    back:
+      position: [-0.150, 0.000, 0.200]
+      orientation: 3.14159               # π 弧度
+      gain: 0.9                          # 后方增益略低
+
+    left:
+      position: [0.000, 0.150, 0.200]
+      orientation: 1.5708                # π/2 弧度
+      gain: 0.95
+
+    right:
+      position: [0.000, -0.150, 0.200]
+      orientation: -1.5708               # -π/2 弧度
+      gain: 0.95
+
+  # 发布配置
+  publish_frame_id: "rfid_sensor"        # TF坐标系
+  queue_size: 10                         # 发布队列大小
+
+# =============================================
+# RFID标签数据库配置
+# =============================================
+rfid_tags:
+  # 数据库设置
+  database_file: "library_tags.db"       # 标签数据库文件
+  default_power: 1.0                     # 默认标签功率
+
+  # 标签分布（用于自动生成）
+  auto_generate: false                   # 是否自动生成标签
+  shelf_tags_per_meter: 2.0              # 每米书架的标签数
+
+  # 预定义标签位置（与Gazebo世界文件匹配）
+  predefined_tags:
+    - id: "test_tag_origin"
+      position: [0.000, 0.000, 0.100]          # 世界坐标原点测试标签（与Gazebo世界文件匹配）
+      power: 1.0
+      description: "原点测试标签"

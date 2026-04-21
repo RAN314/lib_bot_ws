@@ -120,19 +120,29 @@ class RFIDSensorNode(Node):
         # 从YAML文件加载配置
         if config_file and os.path.exists(config_file):
             try:
+                self.get_logger().info(f'尝试加载配置文件: {config_file}')
                 with open(config_file, 'r') as f:
                     file_config = yaml.safe_load(f)
+                self.get_logger().info(f'YAML解析结果: {file_config is not None}')
                 if file_config:
+                    self.get_logger().info(f'配置文件顶级键: {list(file_config.keys())}')
                     # 合并配置
                     if 'rfid_noise_model' in file_config:
                         default_config['noise_model'].update(file_config['rfid_noise_model'])
+                        self.get_logger().info('已更新rfid_noise_model配置')
                     if 'rfid_sensor' in file_config:
                         default_config['sensor'].update(file_config['rfid_sensor'])
+                        self.get_logger().info('已更新rfid_sensor配置')
                     if 'rfid_tags' in file_config:
                         default_config['rfid_tags'] = file_config['rfid_tags']
+                        self.get_logger().info(f'已更新rfid_tags配置，包含 {len(file_config["rfid_tags"].get("predefined_tags", []))} 个预定义标签')
                     self.get_logger().info(f'成功加载配置文件: {config_file}')
+                else:
+                    self.get_logger().warn('YAML文件为空或解析失败')
             except Exception as e:
                 self.get_logger().warn(f'加载配置文件失败: {e}, 使用默认配置')
+        else:
+            self.get_logger().info(f'未找到配置文件: {config_file}')
 
         return default_config
 
@@ -176,9 +186,15 @@ class RFIDSensorNode(Node):
                 })
             self.rfid_tags = loaded_tags
             self.get_logger().info(f"从配置文件加载 {len(self.rfid_tags)} 个RFID标签")
+            # 打印加载的标签详情
+            for i, tag in enumerate(self.rfid_tags):
+                self.get_logger().info(f"  标签{i+1}: ID={tag['id']}, 位置={tag['position']}, 功率={tag.get('power', 1.0)}")
         else:
             self.rfid_tags = default_tags
             self.get_logger().info(f"使用默认的 {len(self.rfid_tags)} 个RFID标签")
+            # 打印默认标签详情
+            for i, tag in enumerate(self.rfid_tags):
+                self.get_logger().info(f"  标签{i+1}: ID={tag['id']}, 位置={tag['position']}, 功率={tag.get('power', 1.0)}")
 
     def _pose_callback(self, msg: Pose):
         """机器人位姿回调 - 来自Gazebo"""
@@ -246,6 +262,12 @@ class RFIDSensorNode(Node):
                 robot_orientation=self.robot_pose[2],
                 timestamp=current_time
             )
+
+            # 记录最高置信度的检测结果
+            if detection_results:
+                best_result = max(detection_results, key=lambda x: x.confidence if x.detected else 0)
+                if best_result.detected and best_result.confidence > 0.1:  # 只记录置信度>0.1的检测
+                    self.get_logger().info(f"方向[{direction}]最高置信度检测: ID={best_result.tag_id}, 置信度={best_result.confidence:.3f}, 距离={best_result.distance:.3f}米")
 
             # 创建并发布RFIDScan消息
             scan_msg = self._create_rfid_scan_msg(
@@ -346,8 +368,25 @@ def main(args=None):
     """主函数 - 用于独立运行测试"""
     rclpy.init(args=args)
 
+    # 创建RFID传感器节点，尝试从多个位置获取配置文件
+    config_file = None
+
+    # 方法1: 从命令行参数获取
+    for arg in args or []:
+        if arg.startswith('config_file:='):
+            config_file = arg.split(':=')[1]
+            break
+
+    # 方法2: 使用默认配置文件路径
+    if config_file is None:
+        import os
+        default_config = '/home/lhl/lib_bot_ws/src/libbot_simulation/config/rfid_simple_config.yaml'
+        if os.path.exists(default_config):
+            config_file = default_config
+            print(f"使用默认配置文件: {config_file}")
+
     # 创建RFID传感器节点
-    rfid_node = RFIDSensorNode()
+    rfid_node = RFIDSensorNode(config_file=config_file)
 
     try:
         # 启动节点
