@@ -124,6 +124,9 @@ class MainWindow(QMainWindow):
         # 图书信息
         self.ros2_manager.book_info_received.connect(self.on_book_info_received)
 
+        # RFID检测更新
+        self.ros2_manager.rfid_detection_updated.connect(self.on_rfid_detection_updated)
+
         # 左侧面板按钮信号
         self.left_panel.find_book_clicked.connect(self.show_find_book_dialog)
         self.left_panel.cancel_clicked.connect(self.on_cancel_clicked)
@@ -395,8 +398,6 @@ class MainWindow(QMainWindow):
     def on_task_status_updated(self, status):
         """处理任务状态更新"""
         # 调试：打印收到的状态
-        print(f"[DEBUG] 主窗口收到状态更新: {status.get('status', 'unknown')}, 进度: {status.get('progress', 0)}%")
-
         status_text = status.get("status", "unknown")
 
         if status_text == "completed":
@@ -555,8 +556,9 @@ class MainWindow(QMainWindow):
 
     def on_robot_pose_updated(self, pose):
         """处理机器人位置更新"""
-        # 可以更新位置显示
-        pass
+        # 更新位置显示到状态面板
+        if hasattr(self.right_panel, 'status_panel'):
+            self.right_panel.status_panel.position_card.update_position(pose)
 
     def on_error_occurred(self, error):
         """处理错误"""
@@ -573,6 +575,44 @@ class MainWindow(QMainWindow):
         """处理图书信息接收"""
         if hasattr(self.right_panel, "update_book_info"):
             self.right_panel.update_book_info(info)
+
+    def on_rfid_detection_updated(self, detection_data):
+        """处理RFID检测更新"""
+        # 更新传感器信息到状态面板
+        if hasattr(self.right_panel, 'status_panel'):
+            # 计算总的检测到的图书数量和最高信号强度
+            detected_books = detection_data.get("detected_books", [])
+            signal_strengths = detection_data.get("signal_strengths", [])
+
+            # 创建传感器数据字典
+            sensor_data = {
+                "books_detected": len(detected_books),
+                "signal_strength": max(signal_strengths) if signal_strengths else 0.0
+            }
+
+            # 更新传感器卡片
+            self.right_panel.status_panel.sensor_card.update_sensor_data(
+                sensor_data,
+                detected_books=detected_books,
+                signal_strengths=signal_strengths,
+                direction=detection_data.get("direction", "unknown")
+            )
+
+            # 记录RFID检测日志（可选，避免过于频繁）
+            if detected_books:
+                direction = detection_data.get("direction", "unknown")
+                if not hasattr(self, '_last_rfid_log') or self._last_rfid_log != f"{direction}_{detected_books}":
+                    if hasattr(self.right_panel, 'add_timestamped_log'):
+                        self.right_panel.add_timestamped_log(
+                            f"📡 RFID检测到 {len(detected_books)} 本书籍 [{direction}] 信号强度: {sensor_data['signal_strength']:.2f}",
+                            "INFO"
+                        )
+                    elif hasattr(self.right_panel, 'add_log_entry'):
+                        self.right_panel.add_log_entry(
+                            f"📡 RFID检测到 {len(detected_books)} 本书籍 [{direction}] 信号强度: {sensor_data['signal_strength']:.2f}",
+                            "INFO"
+                        )
+                    self._last_rfid_log = f"{direction}_{detected_books}"
 
     def update_l1_recovery_visibility(self):
         """更新L1恢复按钮组的可见性"""

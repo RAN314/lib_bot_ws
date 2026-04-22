@@ -2,22 +2,22 @@
 # UID -> 坐标映射
 
 books:
-  # 原点RFID标签对应的书籍
+  # 原点RFID标签对应的书籍（与世界文件匹配）
   "ORIGIN_BOOK_001":
     title: "图书馆指南"
     author: "图书馆管理员"
     isbn: "978-7-000-00001-1"
-    position: {x: 0.0, y: 0.0, z: 0.0}
+    position: {x: 0.0, y: 0.0, z: 0.1}   # 与世界文件中的rfid_tag_origin位置一致
     shelf_zone: "O"
     shelf_level: 1
     description: "原点测试书籍，用于RFID功能验证"
 
-  # 示例书籍数据
+  # 示例书籍数据（与世界文件RFID标签位置一致）
   "BK001":
     title: "人工智能导论"
     author: "张三"
     isbn: "978-7-111-12345-6"
-    position: {x: 2.5, y: 1.8, z: 0.0}
+    position: {x: 1.06, y: -1.5, z: 0.0}
     shelf_zone: "A"
     shelf_level: 2
 
@@ -25,7 +25,7 @@ books:
     title: "机器学习实战"
     author: "李四"
     isbn: "978-7-111-54321-0"
-    position: {x: 4.2, y: 3.1, z: 0.0}
+    position: {x: -3.87, y: -1.26, z: 0.0}
     shelf_zone: "B"
     shelf_level: 1
 
@@ -33,7 +33,7 @@ books:
     title: "深度学习"
     author: "王五"
     isbn: "978-7-111-98765-4"
-    position: {x: 1.8, y: 4.5, z: 0.0}
+    position: {x: -2.26, y: -4.71, z: 0.0}
     shelf_zone: "A"
     shelf_level: 3
 
@@ -42,7 +42,7 @@ books:
     title: "计算机视觉"
     author: "赵六"
     isbn: "978-7-111-11111-1"
-    position: {x: 3.7, y: 2.3, z: 0.0}
+    position: {x: -2.26, y: 2.67, z: 0.0}
     shelf_zone: "C"
     shelf_level: 2
 
@@ -50,7 +50,7 @@ books:
     title: "自然语言处理"
     author: "钱七"
     isbn: "978-7-111-22222-2"
-    position: {x: 5.1, y: 1.2, z: 0.0}
+    position: {x: 7.11, y: -2.79, z: 0.0}
     shelf_zone: "B"
     shelf_level: 1
 

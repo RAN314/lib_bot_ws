@@ -295,7 +295,7 @@ rfid_tags:
       description: "书架RFID标签_043"
 
     - id: "ORIGIN_BOOK_001"
-      position: [0.000, 0.000, 0.100]          # 世界坐标原点书籍标签
+      position: [2.000, 2.000, 0.100]          # 调整位置避免冲突
       power: 1.0
       description: "图书馆指南 - 原点测试书籍"
 

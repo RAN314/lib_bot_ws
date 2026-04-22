@@ -278,6 +278,10 @@ class RFIDSensorNode(Node):
 
             self._rfid_publishers[direction].publish(scan_msg)
 
+            # 记录检测到的图书
+            if scan_msg.detected_book_ids:
+                self.get_logger().debug(f"发布RFID数据到 {direction}: {len(scan_msg.detected_book_ids)} 本书籍, 信号强度: {scan_msg.signal_strengths}")
+
     def _get_tags_in_range(self, direction: str) -> List[Dict]:
         """获取指定方向范围内的标签"""
         max_range = self.config.get('noise_model', {}).get('base_detection_range', 0.5)

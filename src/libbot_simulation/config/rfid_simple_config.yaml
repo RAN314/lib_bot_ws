@@ -6,12 +6,12 @@
 # =============================================
 rfid_noise_model:
   # 基础检测参数
-  base_detection_range: 0.5              # 基础检测范围（米）
+  base_detection_range: 2.5              # 基础检测范围（米）
   scan_frequency: 10.0                   # 扫描频率（Hz）
   min_signal_strength: 0.1              # 最小可检测信号强度
 
   # 噪声特性
-  false_negative_rate: 0.05             # 漏检率5%
+  false_negative_rate: 0.01             # 漏检率5%
   false_positive_rate: 0.00             # 误检率0% (关闭虚假标签)
   distance_decay_factor: 2.0            # 距离衰减因子
   angle_sensitivity: 0.8                # 角度敏感度
@@ -77,9 +77,36 @@ rfid_tags:
   auto_generate: false                   # 是否自动生成标签
   shelf_tags_per_meter: 2.0              # 每米书架的标签数
 
-  # 预定义标签位置（与Gazebo世界文件匹配）
+  # 预定义标签位置（以书籍数据库为标准）
   predefined_tags:
-    - id: "test_tag_origin"
-      position: [0.000, 0.000, 0.100]          # 世界坐标原点测试标签（与Gazebo世界文件匹配）
+    # 原点标签
+    - id: "ORIGIN_BOOK_001"
+      position: [0.0, 0.0, 0.1]
       power: 1.0
-      description: "原点测试标签"
+      description: "图书馆指南"
+
+    # 示例图书标签（与世界文件RFID标签位置一致）
+    - id: "BK001"
+      position: [1.06, -1.5, 0.0]
+      power: 1.0
+      description: "人工智能导论"
+
+    - id: "BK002"
+      position: [-3.87, -1.26, 0.0]
+      power: 1.0
+      description: "机器学习实战"
+
+    - id: "BK003"
+      position: [-2.26, -4.71, 0.0]
+      power: 1.0
+      description: "深度学习"
+
+    - id: "BK004"
+      position: [-2.26, 2.67, 0.0]
+      power: 1.0
+      description: "计算机视觉"
+
+    - id: "BK005"
+      position: [7.11, -2.79, 0.0]
+      power: 1.0
+      description: "自然语言处理"

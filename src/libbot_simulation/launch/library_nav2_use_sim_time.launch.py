@@ -42,9 +42,9 @@ def generate_launch_description():
         'params_file',
         default=PathJoinSubstitution(
             [
-                FindPackageShare('nav2_bringup'),
-                'params',
-                'nav2_params.yaml'
+                FindPackageShare('libbot_simulation'),
+                'config',
+                'library_nav2_params.yaml'
             ]
         )
     )

@@ -14,6 +14,7 @@ from geometry_msgs.msg import PoseStamped, Twist
 from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose
+from libbot_msgs.msg import RFIDScan
 import yaml
 
 # 导入L1和L2恢复集成
@@ -49,6 +50,10 @@ class Ros2Manager(QObject):
     # 图书信息收到
     # 发送: 图书信息字典
     book_info_received = pyqtSignal(dict)
+
+    # RFID检测更新
+    # 发送: {"direction": "front", "detected_books": [...], "signal_strengths": [...]}
+    rfid_detection_updated = pyqtSignal(dict)
 
     # ========== 初始化 ==========
 
@@ -179,6 +184,9 @@ class Ros2Manager(QObject):
             # 初始化仿真环境接口
             self._init_simulation_interface()
 
+            # 初始化RFID订阅
+            self._init_rfid_subscription()
+
             # 启动健康检查定时器
             self._start_health_check()
 
@@ -236,25 +244,94 @@ class Ros2Manager(QObject):
         except Exception as e:
             self.node.get_logger().error(f"仿真环境接口初始化失败: {e}")
 
+    def _init_rfid_subscription(self):
+        """初始化RFID订阅"""
+        try:
+            # 订阅四个方向的RFID扫描结果
+            directions = ['front', 'back', 'left', 'right']
+            self.rfid_subscribers = {}
+
+            for direction in directions:
+                topic_name = f'/rfid/scan/{direction}'
+                subscriber = self.node.create_subscription(
+                    RFIDScan,
+                    topic_name,
+                    lambda msg, dir=direction: self._rfid_callback(msg, dir),
+                    10
+                )
+                self.rfid_subscribers[direction] = subscriber
+                self.node.get_logger().info(f"已订阅RFID话题: {topic_name}")
+
+            self.node.get_logger().info("RFID订阅初始化成功")
+
+        except Exception as e:
+            self.node.get_logger().error(f"RFID订阅初始化失败: {e}")
+
+    def _rfid_callback(self, msg, direction):
+        """RFID检测回调"""
+        try:
+            # 构建检测数据
+            detection_data = {
+                "direction": direction,
+                "detected_books": list(msg.detected_book_ids),
+                "signal_strengths": list(msg.signal_strengths),
+                "is_moving": msg.is_moving,
+                "detection_range": msg.detection_range,
+                "timestamp": msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+            }
+
+            # 发射信号更新UI
+            print(f"[DEBUG] ROS2Manager发射RFID信号: {detection_data}")  # 调试信息
+            self.rfid_detection_updated.emit(detection_data)
+
+            # 记录检测到的书籍
+            if msg.detected_book_ids:
+                self.node.get_logger().info(
+                    f"RFID检测 - 方向[{direction}]: 检测到 {len(msg.detected_book_ids)} 本书籍, "
+                    f"信号强度: {msg.signal_strengths}"
+                )
+
+        except Exception as e:
+            self.node.get_logger().error(f"RFID回调处理失败: {e}")
+
     def _robot_pose_callback(self, msg):
         """机器人位置回调"""
+        # 四元数转yaw角
+        yaw = self._quaternion_to_yaw(msg.pose.orientation)
+
         pose_dict = {
             'x': msg.pose.position.x,
             'y': msg.pose.position.y,
             'z': msg.pose.position.z,
-            'yaw': 0.0  # 可以从四元数计算
+            'yaw': yaw
         }
+
+        # 标记已接收到真实位置数据
+        self._received_real_pose = True
         self.robot_pose_updated.emit(pose_dict)
 
     def _odom_callback(self, msg):
         """里程计回调"""
+        # 四元数转yaw角
+        yaw = self._quaternion_to_yaw(msg.pose.pose.orientation)
+
         pose_dict = {
             'x': msg.pose.pose.position.x,
             'y': msg.pose.pose.position.y,
             'z': msg.pose.pose.position.z,
-            'yaw': 0.0  # 可以从四元数计算
+            'yaw': yaw
         }
+
+        # 标记已接收到真实位置数据
+        self._received_real_pose = True
         self.robot_pose_updated.emit(pose_dict)
+
+    def _quaternion_to_yaw(self, orientation):
+        """四元数转偏航角"""
+        import math
+        qx, qy, qz, qw = orientation.x, orientation.y, orientation.z, orientation.w
+        yaw = math.atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz))
+        return yaw
 
     def navigate_to_position(self, x, y, z=0.0, frame_id='map'):
         """导航到指定位置（使用NavigateToPose Action）
@@ -1084,8 +1161,8 @@ class Ros2Manager(QObject):
 
         self.system_health_updated.emit(health_data)
 
-        # 更新机器人位置
-        if "robot_pose" in health_data:
+        # 更新机器人位置（仅在没有接收到真实位置数据时使用）
+        if "robot_pose" in health_data and not hasattr(self, '_received_real_pose'):
             self.robot_pose_updated.emit(health_data["robot_pose"])
 
     # ========== 清理 ==========

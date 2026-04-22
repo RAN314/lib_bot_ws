@@ -4,6 +4,7 @@
 Story 1-4: 状态显示和进度条实现
 """
 
+import time
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QFrame,
     QHBoxLayout, QPushButton
@@ -88,10 +89,14 @@ class StatusPanel(QWidget):
                 remaining_time=status_data.get("estimated_remaining", 0)
             )
 
-            # 更新位置信息
+            # 更新位置信息（带轻量级节流）
             pose_data = status_data.get("robot_pose") or status_data.get("current_pose")
             if pose_data:
-                self.position_card.update_position(pose_data)
+                current_time = time.time()
+                # 位置信息每0.3秒更新一次，避免过于频繁的UI刷新
+                if not hasattr(self, '_last_pose_update') or (current_time - self._last_pose_update) >= 0.3:
+                    self.position_card.update_position(pose_data)
+                    self._last_pose_update = current_time
 
             # 更新传感器信息
             self.sensor_card.update_sensor_data({
@@ -263,6 +268,10 @@ class SensorCard(QFrame):
     def __init__(self):
         super().__init__()
         self.setObjectName("sensor_card")
+
+        # 添加清除延迟机制
+        self.clear_timer = None
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -281,15 +290,69 @@ class SensorCard(QFrame):
         self.signal_label.setObjectName("signal_label")
         layout.addWidget(self.signal_label)
 
-    def update_sensor_data(self, sensor_data):
+        # 最高信号强度书籍信息
+        self.best_book_label = QLabel("最强信号书籍: --")
+        self.best_book_label.setObjectName("best_book_label")
+        layout.addWidget(self.best_book_label)
+
+    def update_sensor_data(self, sensor_data, detected_books=None, signal_strengths=None, direction="unknown"):
         """更新传感器数据"""
+        current_time = time.time()
+
+        # 提高刷新率 - 只有数据变化时才更新，但允许更频繁的更新
+        if hasattr(self, 'last_update_time') and (current_time - self.last_update_time) < 0.1:
+            return  # 100ms最小间隔，提高响应速度
+
         books = sensor_data.get("books_detected", 0)
         signal = sensor_data.get("signal_strength", 0)
 
+        # 如果有具体的书籍和信号强度数据，找出最强的
+        best_book_info = ""
+        if detected_books and signal_strengths and len(detected_books) == len(signal_strengths):
+            max_index = signal_strengths.index(max(signal_strengths))
+            best_book = detected_books[max_index]
+            best_signal = signal_strengths[max_index]
+            best_book_info = f" (最强: {best_book} {best_signal*100:.0f}%)"
+
         self.books_label.setText(f"检测到图书: {books}")
-        self.signal_label.setText(f"信号强度: {signal*100:.0f}%")
+        self.signal_label.setText(f"信号强度: {signal*100:.0f}%{best_book_info}")
+        self.best_book_label.setText(f"最强信号书籍: {best_book if detected_books and signal_strengths else '--'}")
+
+        # 如果有检测到数据，取消之前的清除定时器
+        if detected_books and signal_strengths:
+            if self.clear_timer:
+                self.clear_timer.stop()
+                self.clear_timer = None
+        else:
+            # 没有检测到数据，设置1.5秒后清除
+            if not self.clear_timer:
+                from PyQt5.QtCore import QTimer
+                self.clear_timer = QTimer(self)
+                self.clear_timer.setSingleShot(True)
+                self.clear_timer.timeout.connect(self._delayed_clear)
+                self.clear_timer.start(1500)  # 1.5秒后清除
+
+        # 强制UI刷新
+        self.books_label.repaint()
+        self.signal_label.repaint()
+        self.best_book_label.repaint()
+
+        # 存储最后的数据用于下次比较
+        self._last_detected_books = detected_books or []
+        self._last_signal = signal
+        self.last_update_time = current_time
 
     def clear(self):
         """清除传感器信息"""
         self.books_label.setText("检测到图书: 0")
         self.signal_label.setText("信号强度: 0%")
+        self.best_book_label.setText("最强信号书籍: --")
+        # 停止清除定时器
+        if hasattr(self, 'clear_timer') and self.clear_timer:
+            self.clear_timer.stop()
+            self.clear_timer = None
+
+    def _delayed_clear(self):
+        """延迟清除传感器信息"""
+        if not hasattr(self, '_last_detected_books') or not self._last_detected_books:
+            self.clear()

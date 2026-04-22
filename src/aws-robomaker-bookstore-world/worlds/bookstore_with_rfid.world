@@ -1136,12 +1136,56 @@
       <direction>0 0 -1</direction>
     </light>
 
-    <!-- RFID标签 - 在原点附近 -->
-    <model name="rfid_tag_origin">
+    <!-- RFID标签 - 与书籍数据库和RFID配置一致 -->
+    <model name="ORIGIN_BOOK_001">
       <include>
         <uri>model://rfid_tag</uri>
       </include>
       <pose frame="">0.0 0.0 0.1 0 0 0</pose>
+    </model>
+    <model name="BK001">
+      <include>
+        <uri>model://rfid_tag</uri>
+      </include>
+      <pose frame="">1.06 -1.5 0.0 0 0 0</pose>
+    </model>
+    <model name="BK002">
+      <include>
+        <uri>model://rfid_tag</uri>
+      </include>
+      <pose frame="">-3.87 -1.26 0.0 0 0 0</pose>
+    </model>
+    <model name="BK003">
+      <include>
+        <uri>model://rfid_tag</uri>
+      </include>
+      <pose frame="">-2.26 -4.71 0.0 0 0 0</pose>
+    </model>
+    <model name="BK004">
+      <include>
+        <uri>model://rfid_tag</uri>
+      </include>
+      <pose frame="">-2.26 2.67 0.0 0 0 0</pose>
+    </model>
+    <model name="BK005">
+      <include>
+        <uri>model://rfid_tag</uri>
+      </include>
+      <pose frame="">7.11 -2.79 0.0 0 0 0</pose>
+    </model>
+
+    <model name="TestBook">
+      <include>
+        <uri>model://Eat_to_Live_The_Amazing_NutrientRich_Program_for_Fast_and_Sustained_Weight_Loss_Revised_Edition_Book</uri>
+      </include>
+      <pose frame="">-3.371503 5.463445 0.398069 0.010463 -0.006266 -1.488070</pose>
+    </model>
+
+    <model name="TestShelf">
+      <include>
+        <uri>model://SquareShelf</uri>
+      </include>
+      <pose frame="">-3.39 5.46 0.1 0 0 0</pose>
     </model>
 
   </world>
